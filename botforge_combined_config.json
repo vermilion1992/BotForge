@@ -1,0 +1,1848 @@
+{
+  "meta": {
+    "name": "BotForge Combined Config",
+    "version": "1.0.0",
+    "notes": [
+      "This file merges the Strategy Registry and Indicators Catalog into a single config bundle.",
+      "Page 3 (Strategy select) sets selectedStrategy.key.",
+      "Page 4 (Advanced Settings) uses registry.strategies[selectedStrategy.key] to decide which indicators/tiles/operands appear.",
+      "Indicators catalog defines each indicator's fields, operands, allowed operators, and tooltips.",
+      "ATR length is only revealed in Advanced Exits when ATR-based stops/trailing are enabled.",
+      "Heikin Ashi not supported. Echo renamed to Hybrid Momentum."
+    ]
+  },
+  "global": {
+    "ruleCap": 5,
+    "operators": [
+      {
+        "id": "crosses_above",
+        "label": "Crosses Above",
+        "tooltip": "Triggers on bar close when left series moves from below to above right series."
+      },
+      {
+        "id": "crosses_below",
+        "label": "Crosses Below",
+        "tooltip": "Triggers on bar close when left series moves from above to below right series."
+      },
+      {
+        "id": "is_above",
+        "label": "Is Above",
+        "tooltip": "True when the left value is greater than the right value at bar close."
+      },
+      {
+        "id": "is_below",
+        "label": "Is Below",
+        "tooltip": "True when the left value is less than the right value at bar close."
+      },
+      {
+        "id": "is_true",
+        "label": "Is True",
+        "tooltip": "A yes/no signal (e.g., histogram > 0, breadth OK)."
+      }
+    ],
+    "combiner": {
+      "options": [
+        {
+          "id": "AND",
+          "label": "All conditions must be true",
+          "tooltip": "Only trade when every condition is satisfied."
+        },
+        {
+          "id": "OR",
+          "label": "Any condition can be true",
+          "tooltip": "Trade when at least one condition is satisfied."
+        }
+      ]
+    },
+    "direction": {
+      "options": [
+        {
+          "id": "LONG",
+          "label": "Long only"
+        },
+        {
+          "id": "SHORT",
+          "label": "Short only"
+        },
+        {
+          "id": "BOTH",
+          "label": "Both"
+        }
+      ],
+      "inverseTooltip": "Flip signals. When the opposite of your rules is true, enter short."
+    },
+    "validation": {
+      "crossRequiresTwoSeries": true,
+      "typeSafety": "Only compare time-series with time-series; use numeric constants or named levels for thresholds.",
+      "preventDuplicates": true
+    },
+    "filters": {
+      "htfTrend": {
+        "enabled": false,
+        "source": "BTC",
+        "ema": 200,
+        "tooltip": "Only trade if higher timeframe trend agrees. Example: only take longs if BTC is above its daily EMA 200.",
+        "togglePairOption": true
+      },
+      "volumeGate": {
+        "enabled": false,
+        "length": 20,
+        "tooltip": "Only allow trades when volume is above its moving average."
+      },
+      "atrActivity": {
+        "enabled": false,
+        "threshold": 1.0,
+        "tooltip": "Only allow trades when volatility (ATR) is above this level."
+      }
+    },
+    "exits": {
+      "default": {
+        "stopLossPct": 2.0,
+        "takeProfitPct": 4.0,
+        "tooltips": {
+          "sl": "Exit if price moves against you by this %.",
+          "tp": "Exit once price reaches this profit %."
+        }
+      },
+      "advanced": {
+        "tpLadders": {
+          "levels": 3,
+          "hasAllocations": true,
+          "tooltip": "Scale out at multiple targets and lock in profits step by step."
+        },
+        "breakeven": {
+          "enabled": false,
+          "triggerPct": 1.5,
+          "offsetPct": 0.1,
+          "tooltip": "Move stop to entry once profit reaches X% (optional offset)."
+        },
+        "trailing": {
+          "types": [
+            "fixed_pct",
+            "atr",
+            "hybrid"
+          ],
+          "tooltip": "Follow price as it moves in your favor."
+        },
+        "atrStop": {
+          "enabled": false,
+          "k": 2.0,
+          "tooltip": "Set stop dynamically as k \u00d7 ATR."
+        },
+        "timeExit": {
+          "modes": [
+            "none",
+            "after_n_candles",
+            "daily_close",
+            "weekly_close"
+          ],
+          "tooltip": "Exit after N candles, or at daily/weekly close."
+        },
+        "priority": {
+          "order": [
+            "trailing",
+            "tp",
+            "time"
+          ],
+          "tooltip": "If multiple exits trigger, this order decides which fires."
+        },
+        "revealLogic": "Show ATR length inputs only when ATR Stop or ATR Trailing are enabled here."
+      },
+      "conflicts": [
+        {
+          "a": "atrStop",
+          "b": "fixedStop",
+          "message": "ATR Stop conflicts with Fixed Stop. Disable one to continue."
+        }
+      ]
+    },
+    "sectionBlurbs": {
+      "indicatorSettings": "Set how each indicator is calculated. These are the \u2018math knobs\u2019 (lengths, levels). Signals use Close prices.",
+      "entryConditionsGeneric": "Combine rules to trigger entries. AND = stricter (all true). OR = looser (any true). Signals computed on bar close.",
+      "advancedStrategy": "Refine entry behavior\u2014confirmation bars and re-entry cooldown.",
+      "filters": "Optional gates. Trades only trigger when these broader conditions also hold.",
+      "defaultExit": "Simple SL/TP. Good starting point for quick testing.",
+      "advancedExit": "Scale-outs, break-even and trailing logic. ATR settings appear here only when needed."
+    }
+  },
+  "strategies": {
+    "ema_crossover_pro": {
+      "displayName": "EMA Crossover Pro",
+      "entryBlurb": "Trade trend shifts when the fast EMA overtakes the slow EMA.",
+      "indicatorSettings": {
+        "ema": {
+          "fields": {
+            "fast": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "Bars used for fast EMA. Shorter = more sensitive.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            },
+            "slow": {
+              "type": "int",
+              "default": 50,
+              "tooltip": "Bars used for slow EMA. Longer = smoother.",
+              "min": 2,
+              "max": 400,
+              "step": 1
+            },
+            "maType": {
+              "type": "enum",
+              "default": "EMA",
+              "tooltip": "Moving average type for price comparisons (EMA/SMA/WMA)."
+            }
+          }
+        }
+      },
+      "tiles": [
+        "ema"
+      ],
+      "operands": {
+        "ema": [
+          "ema_fast",
+          "ema_slow",
+          "price"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "ema_fast",
+          "op": "crosses_above",
+          "rhs": "ema_slow"
+        }
+      ]
+    },
+    "sma_crossover": {
+      "displayName": "SMA Crossover",
+      "entryBlurb": "Capture smoother trend flips using SMA crossovers.",
+      "indicatorSettings": {
+        "sma": {
+          "fields": {
+            "fast": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "Bars for fast SMA.",
+              "min": 2,
+              "max": 400,
+              "step": 1
+            },
+            "slow": {
+              "type": "int",
+              "default": 50,
+              "tooltip": "Bars for slow SMA.",
+              "min": 2,
+              "max": 600,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "sma"
+      ],
+      "operands": {
+        "sma": [
+          "sma_fast",
+          "sma_slow",
+          "price"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "sma_fast",
+          "op": "crosses_above",
+          "rhs": "sma_slow"
+        }
+      ]
+    },
+    "price_vs_ma": {
+      "displayName": "Price vs MA Trend",
+      "entryBlurb": "Stay on the side of the moving average.",
+      "indicatorSettings": {
+        "ma": {
+          "fields": {
+            "period": {
+              "type": "int",
+              "default": 200,
+              "tooltip": "Moving average period.",
+              "min": 2,
+              "max": 600,
+              "step": 1
+            },
+            "maType": {
+              "type": "enum",
+              "default": "EMA",
+              "tooltip": "Select the moving average type."
+            }
+          }
+        }
+      },
+      "tiles": [
+        "price_ma"
+      ],
+      "operands": {
+        "price_ma": [
+          "price",
+          "selected_ma"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "price",
+          "op": "is_above",
+          "rhs": "selected_ma"
+        }
+      ]
+    },
+    "macd_cross": {
+      "displayName": "MACD Cross",
+      "entryBlurb": "Enter when momentum turns as MACD crosses its signal.",
+      "indicatorSettings": {
+        "macd": {
+          "fields": {
+            "fast": {
+              "type": "int",
+              "default": 12,
+              "tooltip": "Fast EMA for MACD.",
+              "min": 2,
+              "max": 60,
+              "step": 1
+            },
+            "slow": {
+              "type": "int",
+              "default": 26,
+              "tooltip": "Slow EMA for MACD.",
+              "min": 2,
+              "max": 120,
+              "step": 1
+            },
+            "signal": {
+              "type": "int",
+              "default": 9,
+              "tooltip": "Signal line length.",
+              "min": 2,
+              "max": 60,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "macd"
+      ],
+      "operands": {
+        "macd": [
+          "macd_line",
+          "macd_signal",
+          "macd_hist_gt0"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "macd_line",
+          "op": "crosses_above",
+          "rhs": "macd_signal"
+        }
+      ]
+    },
+    "rsi_bias": {
+      "displayName": "RSI Bias",
+      "entryBlurb": "Use momentum bias: RSI above 50 = bullish tilt.",
+      "indicatorSettings": {
+        "rsi": {
+          "fields": {
+            "length": {
+              "type": "int",
+              "default": 14,
+              "tooltip": "Bars for RSI.",
+              "min": 2,
+              "max": 100,
+              "step": 1
+            },
+            "overbought": {
+              "type": "int",
+              "default": 70,
+              "tooltip": "RSI overbought threshold.",
+              "min": 50,
+              "max": 100,
+              "step": 1
+            },
+            "oversold": {
+              "type": "int",
+              "default": 30,
+              "tooltip": "RSI oversold threshold.",
+              "min": 0,
+              "max": 50,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "rsi"
+      ],
+      "operands": {
+        "rsi": [
+          "rsi",
+          "rsi_50",
+          "rsi_overbought",
+          "rsi_oversold"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "rsi",
+          "op": "is_above",
+          "rhs": 50
+        }
+      ]
+    },
+    "macd_rsi_swing": {
+      "displayName": "MACD + RSI Swing",
+      "entryBlurb": "Pair a MACD momentum turn with RSI strength confirmation.",
+      "indicatorSettings": {
+        "macd": {
+          "fields": {
+            "fast": {
+              "type": "int",
+              "default": 12,
+              "tooltip": "Fast EMA for MACD.",
+              "min": 2,
+              "max": 60,
+              "step": 1
+            },
+            "slow": {
+              "type": "int",
+              "default": 26,
+              "tooltip": "Slow EMA for MACD.",
+              "min": 2,
+              "max": 120,
+              "step": 1
+            },
+            "signal": {
+              "type": "int",
+              "default": 9,
+              "tooltip": "Signal line length.",
+              "min": 2,
+              "max": 60,
+              "step": 1
+            }
+          }
+        },
+        "rsi": {
+          "fields": {
+            "length": {
+              "type": "int",
+              "default": 14,
+              "tooltip": "Bars for RSI.",
+              "min": 2,
+              "max": 100,
+              "step": 1
+            },
+            "overbought": {
+              "type": "int",
+              "default": 70,
+              "tooltip": "RSI overbought threshold.",
+              "min": 50,
+              "max": 100,
+              "step": 1
+            },
+            "oversold": {
+              "type": "int",
+              "default": 30,
+              "tooltip": "RSI oversold threshold.",
+              "min": 0,
+              "max": 50,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "macd",
+        "rsi"
+      ],
+      "operands": {
+        "macd": [
+          "macd_line",
+          "macd_signal",
+          "macd_hist_gt0"
+        ],
+        "rsi": [
+          "rsi",
+          "rsi_50",
+          "rsi_overbought",
+          "rsi_oversold"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "macd_line",
+          "op": "crosses_above",
+          "rhs": "macd_signal"
+        },
+        {
+          "lhs": "rsi",
+          "op": "is_above",
+          "rhs": 50
+        }
+      ]
+    },
+    "stochastic_kd": {
+      "displayName": "Stochastic (K/D)",
+      "entryBlurb": "Trade reversals when %K crosses %D out of OB/OS.",
+      "indicatorSettings": {
+        "stoch": {
+          "fields": {
+            "k": {
+              "type": "int",
+              "default": 14,
+              "tooltip": "Length for %K.",
+              "min": 2,
+              "max": 100,
+              "step": 1
+            },
+            "d": {
+              "type": "int",
+              "default": 3,
+              "tooltip": "Smoothing for %D.",
+              "min": 1,
+              "max": 50,
+              "step": 1
+            },
+            "overbought": {
+              "type": "int",
+              "default": 80,
+              "tooltip": "Stochastic overbought level.",
+              "min": 50,
+              "max": 100,
+              "step": 1
+            },
+            "oversold": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "Stochastic oversold level.",
+              "min": 0,
+              "max": 50,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "stochastic"
+      ],
+      "operands": {
+        "stochastic": [
+          "stoch_k",
+          "stoch_d",
+          "stoch_ob",
+          "stoch_os"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "stoch_k",
+          "op": "crosses_above",
+          "rhs": "stoch_d"
+        }
+      ]
+    },
+    "bollinger_reversion": {
+      "displayName": "Bollinger Reversion",
+      "entryBlurb": "Fade extremes back toward the middle band.",
+      "indicatorSettings": {
+        "bb": {
+          "fields": {
+            "period": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "Bollinger lookback period.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            },
+            "stdDev": {
+              "type": "float",
+              "default": 2.0,
+              "tooltip": "Standard deviation multiplier.",
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "bollinger"
+      ],
+      "operands": {
+        "bollinger": [
+          "price",
+          "bb_upper",
+          "bb_lower",
+          "bb_mid"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "price",
+          "op": "is_below",
+          "rhs": "bb_lower"
+        }
+      ]
+    },
+    "donchian_breakout": {
+      "displayName": "Donchian Breakout",
+      "entryBlurb": "Trade breakouts from recent highs/lows.",
+      "indicatorSettings": {
+        "donchian": {
+          "fields": {
+            "lookback": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "Donchian channel lookback length.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "donchian"
+      ],
+      "operands": {
+        "donchian": [
+          "price",
+          "donchian_high",
+          "donchian_low"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "price",
+          "op": "crosses_above",
+          "rhs": "donchian_high"
+        }
+      ]
+    },
+    "atr_channel": {
+      "displayName": "ATR Channel / Breakout",
+      "entryBlurb": "Use volatility envelopes for momentum entries.",
+      "indicatorSettings": {
+        "atr_channel": {
+          "fields": {
+            "k": {
+              "type": "float",
+              "default": 2.0,
+              "tooltip": "ATR multiplier for channel distance.",
+              "min": 0.1,
+              "max": 10.0,
+              "step": 0.1
+            },
+            "length": {
+              "type": "int",
+              "default": 14,
+              "tooltip": "ATR length (may also be revealed in Exits when ATR features are enabled).",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "atr_channel"
+      ],
+      "operands": {
+        "atr_channel": [
+          "price",
+          "prevclose_plus_k_atr",
+          "prevclose_minus_k_atr",
+          "atr_gt_threshold"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "price",
+          "op": "is_above",
+          "rhs": "prevclose_plus_k_atr"
+        }
+      ]
+    },
+    "vwap_mean_revert": {
+      "displayName": "VWAP Mean Revert",
+      "entryBlurb": "Revert to value around VWAP.",
+      "indicatorSettings": {
+        "vwap": {
+          "fields": {}
+        }
+      },
+      "tiles": [
+        "vwap"
+      ],
+      "operands": {
+        "vwap": [
+          "price",
+          "vwap"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "price",
+          "op": "is_below",
+          "rhs": "vwap"
+        }
+      ]
+    },
+    "obv_trend": {
+      "displayName": "OBV Trend",
+      "entryBlurb": "Confirm trend with volume flow.",
+      "indicatorSettings": {
+        "obv": {
+          "fields": {
+            "maLength": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "Moving average over OBV.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "obv"
+      ],
+      "operands": {
+        "obv": [
+          "obv",
+          "obv_ma",
+          "obv_slope_up"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "obv",
+          "op": "crosses_above",
+          "rhs": "obv_ma"
+        }
+      ]
+    },
+    "cci_trend": {
+      "displayName": "CCI Trend",
+      "entryBlurb": "Catch bias around the zero-line.",
+      "indicatorSettings": {
+        "cci": {
+          "fields": {
+            "length": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "CCI length.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            },
+            "overbought": {
+              "type": "int",
+              "default": 100,
+              "tooltip": "CCI overbought level.",
+              "min": 50,
+              "max": 300,
+              "step": 1
+            },
+            "oversold": {
+              "type": "int",
+              "default": -100,
+              "tooltip": "CCI oversold level.",
+              "min": -300,
+              "max": -50,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "cci"
+      ],
+      "operands": {
+        "cci": [
+          "cci",
+          "cci_0",
+          "cci_ob",
+          "cci_os"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "cci",
+          "op": "is_above",
+          "rhs": "cci_0"
+        }
+      ]
+    },
+    "momentum_roc": {
+      "displayName": "Momentum ROC",
+      "entryBlurb": "Go with positive momentum above zero.",
+      "indicatorSettings": {
+        "roc": {
+          "fields": {
+            "length": {
+              "type": "int",
+              "default": 12,
+              "tooltip": "Rate-of-change lookback length.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "roc"
+      ],
+      "operands": {
+        "roc": [
+          "roc",
+          "zero_line"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "roc",
+          "op": "is_above",
+          "rhs": "zero_line"
+        }
+      ]
+    },
+    "adx_di_trend": {
+      "displayName": "ADX + DI",
+      "entryBlurb": "Trade only when trend strength is present and direction is clear.",
+      "indicatorSettings": {
+        "adx": {
+          "fields": {
+            "length": {
+              "type": "int",
+              "default": 14,
+              "tooltip": "ADX calculation length.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            },
+            "threshold": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "Minimum ADX to confirm trend strength.",
+              "min": 5,
+              "max": 80,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "adx_di"
+      ],
+      "operands": {
+        "adx_di": [
+          "adx_gt_threshold",
+          "di_plus",
+          "di_minus"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "adx_gt_threshold",
+          "op": "is_true"
+        },
+        {
+          "lhs": "di_plus",
+          "op": "is_above",
+          "rhs": "di_minus"
+        }
+      ]
+    },
+    "ichimoku_trend": {
+      "displayName": "Ichimoku Trend",
+      "entryBlurb": "Use cloud structure for direction.",
+      "indicatorSettings": {
+        "ichimoku": {
+          "fields": {
+            "tenkan": {
+              "type": "int",
+              "default": 9,
+              "tooltip": "Tenkan-sen length.",
+              "min": 2,
+              "max": 60,
+              "step": 1
+            },
+            "kijun": {
+              "type": "int",
+              "default": 26,
+              "tooltip": "Kijun-sen length.",
+              "min": 2,
+              "max": 120,
+              "step": 1
+            },
+            "senkou": {
+              "type": "int",
+              "default": 52,
+              "tooltip": "Senkou span B length.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "ichimoku"
+      ],
+      "operands": {
+        "ichimoku": [
+          "price",
+          "kijun",
+          "tenkan",
+          "cloud_top",
+          "cloud_bottom"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "tenkan",
+          "op": "crosses_above",
+          "rhs": "kijun"
+        }
+      ]
+    },
+    "vwma_trend": {
+      "displayName": "VWMA Trend",
+      "entryBlurb": "Weight price by volume for a truer trend view.",
+      "indicatorSettings": {
+        "vwma": {
+          "fields": {
+            "length": {
+              "type": "int",
+              "default": 50,
+              "tooltip": "VWMA length.",
+              "min": 2,
+              "max": 400,
+              "step": 1
+            }
+          }
+        }
+      },
+      "tiles": [
+        "vwma"
+      ],
+      "operands": {
+        "vwma": [
+          "price",
+          "vwma"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "price",
+          "op": "is_above",
+          "rhs": "vwma"
+        }
+      ]
+    },
+    "hybrid_momentum": {
+      "displayName": "Hybrid Momentum",
+      "entryBlurb": "Stack fast trend, momentum, and breadth.",
+      "indicatorSettings": {
+        "ema": {
+          "fields": {
+            "fast": {
+              "type": "int",
+              "default": 20,
+              "tooltip": "Fast EMA.",
+              "min": 2,
+              "max": 200,
+              "step": 1
+            },
+            "slow": {
+              "type": "int",
+              "default": 50,
+              "tooltip": "Slow EMA.",
+              "min": 2,
+              "max": 400,
+              "step": 1
+            },
+            "maType": {
+              "type": "enum",
+              "default": "EMA",
+              "tooltip": "Moving average type."
+            }
+          }
+        },
+        "rsi": {
+          "fields": {
+            "length": {
+              "type": "int",
+              "default": 14,
+              "tooltip": "RSI length.",
+              "min": 2,
+              "max": 100,
+              "step": 1
+            },
+            "overbought": {
+              "type": "int",
+              "default": 70,
+              "tooltip": "Overbought level.",
+              "min": 50,
+              "max": 100,
+              "step": 1
+            },
+            "oversold": {
+              "type": "int",
+              "default": 30,
+              "tooltip": "Oversold level.",
+              "min": 0,
+              "max": 50,
+              "step": 1
+            }
+          }
+        },
+        "macd": {
+          "fields": {
+            "fast": {
+              "type": "int",
+              "default": 12,
+              "tooltip": "MACD fast.",
+              "min": 2,
+              "max": 60,
+              "step": 1
+            },
+            "slow": {
+              "type": "int",
+              "default": 26,
+              "tooltip": "MACD slow.",
+              "min": 2,
+              "max": 120,
+              "step": 1
+            },
+            "signal": {
+              "type": "int",
+              "default": 9,
+              "tooltip": "Signal length.",
+              "min": 2,
+              "max": 60,
+              "step": 1
+            }
+          }
+        },
+        "breadth": {
+          "fields": {}
+        }
+      },
+      "tiles": [
+        "ema",
+        "rsi",
+        "macd",
+        "breadth"
+      ],
+      "operands": {
+        "ema": [
+          "ema_fast",
+          "ema_slow"
+        ],
+        "rsi": [
+          "rsi",
+          "rsi_50",
+          "rsi_overbought",
+          "rsi_oversold"
+        ],
+        "macd": [
+          "macd_line",
+          "macd_signal",
+          "macd_hist_gt0"
+        ],
+        "breadth": [
+          "breadth_ok"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "ema_fast",
+          "op": "crosses_above",
+          "rhs": "ema_slow"
+        },
+        {
+          "lhs": "rsi",
+          "op": "is_above",
+          "rhs": 50
+        },
+        {
+          "lhs": "macd_line",
+          "op": "crosses_above",
+          "rhs": "macd_signal"
+        },
+        {
+          "lhs": "breadth_ok",
+          "op": "is_true"
+        }
+      ]
+    },
+    "market_breadth_gate": {
+      "displayName": "Market Breadth Gate",
+      "entryBlurb": "Only trade when market participation is healthy.",
+      "indicatorSettings": {
+        "breadth": {
+          "fields": {
+            "minPercentAboveMA": {
+              "type": "float",
+              "default": 0.55,
+              "tooltip": "Minimum fraction of assets above HTF MA to allow trades.",
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          }
+        }
+      },
+      "tiles": [
+        "breadth"
+      ],
+      "operands": {
+        "breadth": [
+          "breadth_ok",
+          "breadth_value"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "breadth_ok",
+          "op": "is_true"
+        }
+      ]
+    },
+    "market_neutral": {
+      "displayName": "Market-Neutral",
+      "entryBlurb": "Enter when ranking and spread favor longs over shorts.",
+      "indicatorSettings": {
+        "rank": {
+          "fields": {
+            "topN": {
+              "type": "int",
+              "default": 10,
+              "tooltip": "Count of top-ranked assets for long basket.",
+              "min": 1,
+              "max": 50,
+              "step": 1
+            },
+            "bottomN": {
+              "type": "int",
+              "default": 10,
+              "tooltip": "Count of bottom-ranked assets for short basket.",
+              "min": 1,
+              "max": 50,
+              "step": 1
+            }
+          }
+        },
+        "spread": {
+          "fields": {
+            "threshold": {
+              "type": "float",
+              "default": 0.0,
+              "tooltip": "Minimum spread advantage to trade.",
+              "min": -1.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          }
+        }
+      },
+      "tiles": [
+        "rank",
+        "spread"
+      ],
+      "operands": {
+        "rank": [
+          "rank_long_topN",
+          "rank_short_bottomN"
+        ],
+        "spread": [
+          "spread_score",
+          "zero_line"
+        ]
+      },
+      "defaultSeeds": [
+        {
+          "lhs": "rank_long_topN",
+          "op": "is_true"
+        },
+        {
+          "lhs": "spread_score",
+          "op": "is_above",
+          "rhs": "zero_line"
+        }
+      ]
+    }
+  },
+  "indicators": {
+    "price": {
+      "displayName": "Price",
+      "panel": {
+        "fields": {}
+      },
+      "operands": [
+        "price"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Last traded price on the selected timeframe (Close)."
+    },
+    "ema": {
+      "displayName": "EMA",
+      "panel": {
+        "fields": {
+          "fast": {
+            "type": "int",
+            "default": 20,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "Bars used for fast EMA. Shorter = more sensitive."
+          },
+          "slow": {
+            "type": "int",
+            "default": 50,
+            "min": 2,
+            "max": 400,
+            "step": 1,
+            "tooltip": "Bars used for slow EMA. Longer = smoother."
+          },
+          "maType": {
+            "type": "enum",
+            "default": "EMA",
+            "options": [
+              "EMA",
+              "SMA",
+              "WMA"
+            ],
+            "tooltip": "Moving average type for price comparisons."
+          }
+        }
+      },
+      "operands": [
+        "ema_fast",
+        "ema_slow"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Exponential Moving Average; useful for detecting trend shifts via fast/slow crossovers."
+    },
+    "sma": {
+      "displayName": "SMA",
+      "panel": {
+        "fields": {
+          "fast": {
+            "type": "int",
+            "default": 20,
+            "min": 2,
+            "max": 400,
+            "step": 1,
+            "tooltip": "Bars for fast SMA."
+          },
+          "slow": {
+            "type": "int",
+            "default": 50,
+            "min": 2,
+            "max": 600,
+            "step": 1,
+            "tooltip": "Bars for slow SMA."
+          }
+        }
+      },
+      "operands": [
+        "sma_fast",
+        "sma_slow"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Simple Moving Average; slower and smoother than EMA for crossover signals."
+    },
+    "ma": {
+      "displayName": "Selected MA",
+      "panel": {
+        "fields": {
+          "period": {
+            "type": "int",
+            "default": 200,
+            "min": 2,
+            "max": 600,
+            "step": 1,
+            "tooltip": "Lookback period for the selected moving average."
+          },
+          "maType": {
+            "type": "enum",
+            "default": "EMA",
+            "options": [
+              "EMA",
+              "SMA",
+              "WMA"
+            ],
+            "tooltip": "Moving average calculation."
+          }
+        }
+      },
+      "operands": [
+        "selected_ma"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "A configurable moving average used for \u2018Price vs MA\u2019 trend checks."
+    },
+    "macd": {
+      "displayName": "MACD",
+      "panel": {
+        "fields": {
+          "fast": {
+            "type": "int",
+            "default": 12,
+            "min": 2,
+            "max": 60,
+            "step": 1,
+            "tooltip": "Fast EMA length for MACD."
+          },
+          "slow": {
+            "type": "int",
+            "default": 26,
+            "min": 2,
+            "max": 120,
+            "step": 1,
+            "tooltip": "Slow EMA length for MACD."
+          },
+          "signal": {
+            "type": "int",
+            "default": 9,
+            "min": 2,
+            "max": 60,
+            "step": 1,
+            "tooltip": "Signal line smoothing length."
+          }
+        }
+      },
+      "operands": [
+        "macd_line",
+        "macd_signal",
+        "macd_hist_gt0"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below",
+        "is_true"
+      ],
+      "tooltip": "MACD highlights momentum shifts via line/signal crossovers and histogram polarity."
+    },
+    "rsi": {
+      "displayName": "RSI",
+      "panel": {
+        "fields": {
+          "length": {
+            "type": "int",
+            "default": 14,
+            "min": 2,
+            "max": 100,
+            "step": 1,
+            "tooltip": "Bars used to compute RSI."
+          },
+          "overbought": {
+            "type": "int",
+            "default": 70,
+            "min": 50,
+            "max": 100,
+            "step": 1,
+            "tooltip": "Overbought threshold."
+          },
+          "oversold": {
+            "type": "int",
+            "default": 30,
+            "min": 0,
+            "max": 50,
+            "step": 1,
+            "tooltip": "Oversold threshold."
+          }
+        }
+      },
+      "operands": [
+        "rsi",
+        "rsi_50",
+        "rsi_overbought",
+        "rsi_oversold"
+      ],
+      "allowedOperators": [
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Relative Strength Index; momentum bias via midline (50) and OB/OS levels."
+    },
+    "stochastic": {
+      "displayName": "Stochastic (K/D)",
+      "panel": {
+        "fields": {
+          "k": {
+            "type": "int",
+            "default": 14,
+            "min": 2,
+            "max": 100,
+            "step": 1,
+            "tooltip": "Length for %K."
+          },
+          "d": {
+            "type": "int",
+            "default": 3,
+            "min": 1,
+            "max": 50,
+            "step": 1,
+            "tooltip": "Smoothing for %D."
+          },
+          "overbought": {
+            "type": "int",
+            "default": 80,
+            "min": 50,
+            "max": 100,
+            "step": 1,
+            "tooltip": "Overbought level."
+          },
+          "oversold": {
+            "type": "int",
+            "default": 20,
+            "min": 0,
+            "max": 50,
+            "step": 1,
+            "tooltip": "Oversold level."
+          }
+        }
+      },
+      "operands": [
+        "stoch_k",
+        "stoch_d",
+        "stoch_ob",
+        "stoch_os"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Oscillator using %K and %D; crosses near OB/OS hint at reversals."
+    },
+    "bollinger": {
+      "displayName": "Bollinger Bands",
+      "panel": {
+        "fields": {
+          "period": {
+            "type": "int",
+            "default": 20,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "Lookback period for the middle band (MA)."
+          },
+          "stdDev": {
+            "type": "float",
+            "default": 2.0,
+            "min": 0.5,
+            "max": 5.0,
+            "step": 0.1,
+            "tooltip": "Standard deviation multiplier for band width."
+          }
+        }
+      },
+      "operands": [
+        "bb_upper",
+        "bb_lower",
+        "bb_mid"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Volatility bands around a moving average; extremes tend to mean-revert."
+    },
+    "donchian": {
+      "displayName": "Donchian Channel",
+      "panel": {
+        "fields": {
+          "lookback": {
+            "type": "int",
+            "default": 20,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "Lookback for highest high / lowest low."
+          }
+        }
+      },
+      "operands": [
+        "donchian_high",
+        "donchian_low"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Tracks breakout levels of recent range (high/low)."
+    },
+    "atr_channel": {
+      "displayName": "ATR Channel",
+      "panel": {
+        "fields": {
+          "k": {
+            "type": "float",
+            "default": 2.0,
+            "min": 0.1,
+            "max": 10.0,
+            "step": 0.1,
+            "tooltip": "Multiplier for ATR distance from reference."
+          },
+          "length": {
+            "type": "int",
+            "default": 14,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "ATR lookback length."
+          }
+        }
+      },
+      "operands": [
+        "prevclose_plus_k_atr",
+        "prevclose_minus_k_atr",
+        "atr_gt_threshold"
+      ],
+      "allowedOperators": [
+        "is_above",
+        "is_below",
+        "is_true"
+      ],
+      "tooltip": "Volatility envelopes built from k\u00d7ATR around a reference (e.g., previous close)."
+    },
+    "vwap": {
+      "displayName": "VWAP",
+      "panel": {
+        "fields": {}
+      },
+      "operands": [
+        "vwap"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Volume-weighted average price; common fair value anchor intraday."
+    },
+    "obv": {
+      "displayName": "OBV",
+      "panel": {
+        "fields": {
+          "maLength": {
+            "type": "int",
+            "default": 20,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "Moving average length over OBV."
+          }
+        }
+      },
+      "operands": [
+        "obv",
+        "obv_ma",
+        "obv_slope_up"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below",
+        "is_true"
+      ],
+      "tooltip": "On-Balance Volume cumulates volume flow to confirm price trends."
+    },
+    "cci": {
+      "displayName": "CCI",
+      "panel": {
+        "fields": {
+          "length": {
+            "type": "int",
+            "default": 20,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "CCI length."
+          },
+          "overbought": {
+            "type": "int",
+            "default": 100,
+            "min": 50,
+            "max": 300,
+            "step": 1,
+            "tooltip": "Upper threshold."
+          },
+          "oversold": {
+            "type": "int",
+            "default": -100,
+            "min": -300,
+            "max": -50,
+            "step": 1,
+            "tooltip": "Lower threshold."
+          }
+        }
+      },
+      "operands": [
+        "cci",
+        "cci_0",
+        "cci_ob",
+        "cci_os"
+      ],
+      "allowedOperators": [
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Commodity Channel Index; bias via zero-line and extreme thresholds."
+    },
+    "roc": {
+      "displayName": "ROC",
+      "panel": {
+        "fields": {
+          "length": {
+            "type": "int",
+            "default": 12,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "Rate-of-change lookback length."
+          }
+        }
+      },
+      "operands": [
+        "roc",
+        "zero_line"
+      ],
+      "allowedOperators": [
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Momentum rate-of-change; zero-line separates positive vs negative momentum."
+    },
+    "adx_di": {
+      "displayName": "ADX + DI",
+      "panel": {
+        "fields": {
+          "length": {
+            "type": "int",
+            "default": 14,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "ADX calculation length."
+          },
+          "threshold": {
+            "type": "int",
+            "default": 20,
+            "min": 5,
+            "max": 80,
+            "step": 1,
+            "tooltip": "Minimum ADX to confirm trend strength."
+          }
+        }
+      },
+      "operands": [
+        "adx_gt_threshold",
+        "di_plus",
+        "di_minus"
+      ],
+      "allowedOperators": [
+        "is_true",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Average Directional Index with DI+/DI-; ensures entries only during strong trends."
+    },
+    "ichimoku": {
+      "displayName": "Ichimoku",
+      "panel": {
+        "fields": {
+          "tenkan": {
+            "type": "int",
+            "default": 9,
+            "min": 2,
+            "max": 60,
+            "step": 1,
+            "tooltip": "Tenkan-sen length."
+          },
+          "kijun": {
+            "type": "int",
+            "default": 26,
+            "min": 2,
+            "max": 120,
+            "step": 1,
+            "tooltip": "Kijun-sen length."
+          },
+          "senkou": {
+            "type": "int",
+            "default": 52,
+            "min": 2,
+            "max": 200,
+            "step": 1,
+            "tooltip": "Senkou span B length."
+          }
+        }
+      },
+      "operands": [
+        "tenkan",
+        "kijun",
+        "cloud_top",
+        "cloud_bottom",
+        "price"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Multi-line system using conversion/base lines and the cloud for directional bias."
+    },
+    "vwma": {
+      "displayName": "VWMA",
+      "panel": {
+        "fields": {
+          "length": {
+            "type": "int",
+            "default": 50,
+            "min": 2,
+            "max": 400,
+            "step": 1,
+            "tooltip": "Volume-weighted MA length."
+          }
+        }
+      },
+      "operands": [
+        "vwma"
+      ],
+      "allowedOperators": [
+        "crosses_above",
+        "crosses_below",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Moving average that weights periods by volume."
+    },
+    "breadth": {
+      "displayName": "Market Breadth",
+      "panel": {
+        "fields": {
+          "minPercentAboveMA": {
+            "type": "float",
+            "default": 0.55,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "tooltip": "Minimum fraction of assets above HTF MA to allow trades."
+          }
+        }
+      },
+      "operands": [
+        "breadth_ok",
+        "breadth_value"
+      ],
+      "allowedOperators": [
+        "is_true",
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Measures market participation; gates trades when participation is weak."
+    },
+    "rank": {
+      "displayName": "Cross-Section Rank",
+      "panel": {
+        "fields": {
+          "topN": {
+            "type": "int",
+            "default": 10,
+            "min": 1,
+            "max": 50,
+            "step": 1,
+            "tooltip": "Number of top-ranked assets considered long candidates."
+          },
+          "bottomN": {
+            "type": "int",
+            "default": 10,
+            "min": 1,
+            "max": 50,
+            "step": 1,
+            "tooltip": "Number of bottom-ranked assets considered short candidates."
+          }
+        }
+      },
+      "operands": [
+        "rank_long_topN",
+        "rank_short_bottomN"
+      ],
+      "allowedOperators": [
+        "is_true"
+      ],
+      "tooltip": "Cross-sectional ranking to select long and short baskets."
+    },
+    "spread": {
+      "displayName": "Long\u2013Short Spread",
+      "panel": {
+        "fields": {
+          "threshold": {
+            "type": "float",
+            "default": 0.0,
+            "min": -1.0,
+            "max": 1.0,
+            "step": 0.01,
+            "tooltip": "Minimum spread advantage to trade."
+          }
+        }
+      },
+      "operands": [
+        "spread_score",
+        "zero_line"
+      ],
+      "allowedOperators": [
+        "is_above",
+        "is_below"
+      ],
+      "tooltip": "Performance gap between long and short baskets; positive spread favors longs."
+    }
+  }
+}
