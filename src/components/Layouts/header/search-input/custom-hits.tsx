@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Hits } from "react-instantsearch-dom";
+import { Hits } from "@/shims/InstantSearchDom";
 
 type PropsType = {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;

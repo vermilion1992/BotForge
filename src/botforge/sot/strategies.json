@@ -1,0 +1,23 @@
+[
+  {"id":"ema_crossover_pro","label":"EMA Crossover Pro","category":["Trend"],"maxRules":5,"allowedIndicators":["ema","sma","atr","macd","rsi","bollinger_bands","supertrend"]},
+  {"id":"rsi_range_momentum","label":"RSI Range Momentum","category":["Momentum"],"maxRules":5,"allowedIndicators":["rsi","stoch_rsi","atr","vwap","bollinger_percent_b","zscore"]},
+  {"id":"breakout_dc","label":"Donchian Breakout","category":["Breakout"],"maxRules":5,"allowedIndicators":["donchian_channels","atr","vwap","obv","cmf"]},
+  {"id":"meanrev_bb","label":"Bollinger Mean Reversion","category":["MeanReversion"],"maxRules":5,"allowedIndicators":["bollinger_bands","bollinger_percent_b","bollinger_bandwidth","rsi","zscore","atr"]},
+  {"id":"supertrend_follow","label":"Supertrend Follower","category":["Trend"],"maxRules":5,"allowedIndicators":["supertrend","atr","ema","adx_dmi","vwap"]},
+  {"id":"macd_swing","label":"MACD Swing","category":["Momentum"],"maxRules":5,"allowedIndicators":["macd","rsi","atr","ema","keltner_channels"]},
+  {"id":"aroon_flip","label":"Aroon Flip","category":["Trend"],"maxRules":5,"allowedIndicators":["aroon","ema","atr","vwap","obv"]},
+  {"id":"vwap_revert","label":"VWAP Revert","category":["MeanReversion"],"maxRules":5,"allowedIndicators":["vwap","rsi","zscore","atr","bollinger_bands"]},
+  {"id":"momentum_rocpush","label":"ROC Push","category":["Momentum"],"maxRules":5,"allowedIndicators":["roc","momentum","ema","atr","rsi"]},
+  {"id":"adx_trend_builder","label":"ADX Trend Builder","category":["Trend"],"maxRules":5,"allowedIndicators":["adx_dmi","ema","atr","supertrend"]},
+  {"id":"fvg_hybrid","label":"FVG Hybrid","category":["Advanced"],"maxRules":5,"allowedIndicators":["fvg","ema","rsi","atr","vwap"]},
+  {"id":"orderblock_retest","label":"Order Block Retest","category":["Advanced"],"maxRules":5,"allowedIndicators":["order_block","ema","atr","rsi"]},
+  {"id":"bos_shift","label":"BOS/CHOCH Shift","category":["Advanced"],"maxRules":5,"allowedIndicators":["bos_choch","ema","atr","vwap"]},
+  {"id":"qqe_swing","label":"QQE Swing","category":["Momentum"],"maxRules":5,"allowedIndicators":["qqe","rsi","atr","ema"]},
+  {"id":"mama_trender","label":"MAMA Trender","category":["Trend"],"maxRules":5,"allowedIndicators":["mama_fama","ema","atr","adx_dmi"]},
+  {"id":"keltner_break","label":"Keltner Break","category":["Breakout"],"maxRules":5,"allowedIndicators":["keltner_channels","atr","ema","rsi"]},
+  {"id":"donchian_pullback","label":"Donchian Pullback","category":["Pullback"],"maxRules":5,"allowedIndicators":["donchian_channels","ema","rsi","atr"]},
+  {"id":"smt_div_sync","label":"SMT Divergence Sync","category":["Advanced"],"maxRules":5,"allowedIndicators":["smt_divergence","rsi","ema","atr"]},
+  {"id":"bollinger_breakspin","label":"Bollinger Breakspin","category":["Breakout"],"maxRules":5,"allowedIndicators":["bollinger_bands","atr","rsi","ema"]},
+  {"id":"parabolic_sar_lane","label":"Parabolic SAR Lane","category":["Trend"],"maxRules":5,"allowedIndicators":["parabolic_sar","ema","atr","rsi"]}
+]
+

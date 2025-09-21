@@ -1,0 +1,11 @@
+[
+  {"id":"regimeFilter","blurb":"Only signal in certain market regimes","constraints":{}},
+  {"id":"confirmationIndicator","blurb":"Require confirmation from another indicator","constraints":{"max":1}},
+  {"id":"timeWindow","blurb":"Restrict to time windows","constraints":{}},
+  {"id":"riskGuard","blurb":"Block signals under adverse risk","constraints":{}},
+  {"id":"priority","blurb":"De-duplicate by priority","constraints":{}},
+  {"id":"signalCooldown","blurb":"Cooldown bars after a trade","constraints":{"maxBars":500}},
+  {"id":"directionBias","blurb":"Bias long/short via filter","constraints":{}},
+  {"id":"multiTFConfirm","blurb":"Confirm on higher timeframe","constraints":{}}
+]
+

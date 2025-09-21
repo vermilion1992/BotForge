@@ -1,0 +1,209 @@
+{
+  "identity": {
+    "id": "atr",
+    "label": "ATR (Average True Range)",
+    "tier": "CORE"
+  },
+  "docs": {
+    "category": "Volatility",
+    "tags": ["Volatility", "Risk", "Filter"],
+    "blurb": "ATR measures absolute price volatility via the average true range over N periods. Commonly used for position sizing, stops, and regime filters.",
+    "longSummary": "Average True Range (ATR) quantifies market volatility by averaging the true range over a lookback window. True range considers the largest of three values: current high−low, |high−previous close|, or |low−previous close|. Because ATR is in price units, it is well suited for dynamic stop placement, volatility filters, and trade management. Many traders use longer ATR for regime detection and shorter ATR for activity spikes. ATR pairs well with trend tools such as EMA/SMA and with band indicators like Bollinger Bands.",
+    "mathSummary": "TR_t = max(High_t − Low_t, |High_t − Close_{t−1}|, |Low_t − Close_{t−1}|). ATR_t = MA(TR, N) (RMA/EMA/SMA/WMA).",
+    "references": ["https://www.investopedia.com/terms/a/atr.asp"]
+  },
+  "params": {
+    "length": {
+      "type": "number",
+      "label": "Length",
+      "default": 14,
+      "min": 2,
+      "max": 200,
+      "step": 1,
+      "unit": "bars"
+    },
+    "method": {
+      "type": "enum",
+      "label": "Smoothing",
+      "enum": ["RMA", "EMA", "SMA", "WMA"],
+      "default": "RMA"
+    },
+    "atrMultHint": {
+      "type": "number",
+      "label": "ATR Mult (hint)",
+      "default": 2.0,
+      "min": 0.1,
+      "max": 10,
+      "step": 0.1
+    }
+  },
+  "outputs": ["value"],
+  "supportedOperators": [">", ">=", "<", "<=", "==", "crosses_above", "crosses_below", "rising", "falling", "within", "outside"],
+  "signals": [
+    {
+      "id": "atr_expansion",
+      "label": "ATR rising (volatility expansion)",
+      "direction": "bullish",
+      "when": { "left": "value", "operator": "rising", "right": 0 }
+    },
+    {
+      "id": "atr_contraction",
+      "label": "ATR falling (volatility contraction)",
+      "direction": "bearish",
+      "when": { "left": "value", "operator": "falling", "right": 0 }
+    }
+  ],
+  "ui": {
+    "tooltips": {
+      "_indicator": "ATR averages true range (absolute volatility). Great for adaptive stops, filters, and position sizing.",
+      "length": "Lookback window for averaging the true range.",
+      "method": "Smoothing method for the ATR average.",
+      "atrMultHint": "A convenience multiplier often used when sizing stops (e.g., 2× ATR)."
+    }
+  },
+  "constraints": {
+    "recommendedTimeframes": ["5m", "15m", "1h", "4h", "1d"]
+  },
+  "examples": [
+    { "name": "ATR Filter (Conservative)", "presetRef": "atr_normal_filter_conservative" },
+    { "name": "ATR Breakout Gate (Balanced)", "presetRef": "atr_normal_breakout_balanced" },
+    { "name": "ATR Momentum Gate (Aggressive)", "presetRef": "atr_normal_momentum_aggressive" },
+    { "name": "ATR Hero: Risk Guarded", "presetRef": "atr_hero_riskguard" },
+    { "name": "ATR Hero: MTF Volatility", "presetRef": "atr_hero_mtf_vol" },
+    { "name": "ATR Hero: Cooldown + Regime", "presetRef": "atr_hero_cooldown_regime" }
+  ],
+  "riskTemplates": {
+    "atrStop": {
+      "enabledDefault": false,
+      "tooltip": "Protective stop using ATR multiple.",
+      "atrPeriodDefault": 14,
+      "atrMultDefault": 2.0
+    },
+    "trailingTP": {
+      "enabledDefault": false,
+      "tooltip": "Trail profits after favorable movement.",
+      "modeDefault": "percent",
+      "stepPctDefault": 1.0,
+      "takeProfitStepsDefault": [25, 50, 75]
+    },
+    "breakeven": {
+      "enabledDefault": false,
+      "tooltip": "Move stop to breakeven after reaching a chosen R multiple.",
+      "triggerRRDefault": 1.0,
+      "offsetPctDefault": 0.1
+    },
+    "timeStop": {
+      "enabledDefault": false,
+      "tooltip": "Exit after a fixed number of bars.",
+      "barsDefault": 288
+    }
+  },
+  "presets": [
+    {
+      "id": "atr_normal_filter_conservative",
+      "label": "ATR Filter (Conservative)",
+      "presetTier": "Normal",
+      "riskProfile": "Conservative",
+      "designIntent": "Filter",
+      "extras": [],
+      "indicators": [
+        { "id": "atr", "params": { "length": 14, "method": "RMA", "atrMultHint": 2.0 } },
+        { "id": "sma", "params": { "length": 200 } }
+      ],
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 0.75, "leverage": 1 },
+        "exits": { "defaultSLPct": 3, "defaultTPPct": 6 }
+      }
+    },
+    {
+      "id": "atr_normal_breakout_balanced",
+      "label": "ATR Breakout Gate (Balanced)",
+      "presetTier": "Normal",
+      "riskProfile": "Balanced",
+      "designIntent": "Breakout",
+      "extras": [],
+      "indicators": [
+        { "id": "atr", "params": { "length": 14, "method": "RMA", "atrMultHint": 2.5 } },
+        { "id": "ema", "params": { "length": 50 } }
+      ],
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 1.5, "leverage": 2 },
+        "exits": { "defaultSLPct": 5, "defaultTPPct": 10 }
+      }
+    },
+    {
+      "id": "atr_normal_momentum_aggressive",
+      "label": "ATR Momentum Gate (Aggressive)",
+      "presetTier": "Normal",
+      "riskProfile": "Aggressive",
+      "designIntent": "Momentum",
+      "extras": [],
+      "indicators": [
+        { "id": "atr", "params": { "length": 10, "method": "EMA", "atrMultHint": 3.0 } },
+        { "id": "ema", "params": { "length": 21 } }
+      ],
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 3.0, "leverage": 3 },
+        "exits": { "defaultSLPct": 7, "defaultTPPct": 14 }
+      }
+    },
+    {
+      "id": "atr_hero_riskguard",
+      "label": "ATR Hero: Risk Guarded",
+      "presetTier": "Hero",
+      "riskProfile": "Balanced",
+      "designIntent": "Filter",
+      "extras": ["riskGuard", "priority"],
+      "cooldownBars": 0,
+      "indicators": [
+        { "id": "atr", "params": { "length": 14, "method": "RMA", "atrMultHint": 2.0 } },
+        { "id": "sma", "params": { "length": 200 } },
+        { "id": "rsi", "params": { "length": 14, "midline": 50 } }
+      ],
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 1.25, "leverage": 2 },
+        "exits": { "defaultSLPct": 4, "defaultTPPct": 8 },
+        "guards": { "atrStop": { "enabled": true, "atrMult": 2.0 } }
+      }
+    },
+    {
+      "id": "atr_hero_mtf_vol",
+      "label": "ATR Hero: MTF Volatility",
+      "presetTier": "Hero",
+      "riskProfile": "Aggressive",
+      "designIntent": "Momentum",
+      "extras": ["multiTFConfirm", "confirmationIndicator"],
+      "cooldownBars": 0,
+      "indicators": [
+        { "id": "atr", "params": { "length": 10, "method": "EMA", "atrMultHint": 2.5 } },
+        { "id": "ema", "params": { "length": 50 } }
+      ],
+      "mtf": { "confirmTF": "4h", "rule": "ATR rising AND EMA(50) rising" },
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 3.0, "leverage": 3 },
+        "exits": { "defaultSLPct": 6, "defaultTPPct": 12 }
+      }
+    },
+    {
+      "id": "atr_hero_cooldown_regime",
+      "label": "ATR Hero: Cooldown + Regime",
+      "presetTier": "Hero",
+      "riskProfile": "Conservative",
+      "designIntent": "Filter",
+      "extras": ["signalCooldown", "regimeFilter"],
+      "cooldownBars": 5,
+      "indicators": [
+        { "id": "atr", "params": { "length": 14, "method": "RMA", "atrMultHint": 2.0 } },
+        { "id": "sma", "params": { "length": 200 } }
+      ],
+      "regime": { "bias": "long_only", "rule": "Price > SMA200" },
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 0.9, "leverage": 1 },
+        "exits": { "defaultSLPct": 3.5, "defaultTPPct": 7 }
+      }
+    }
+  ],
+  "deprecated": false
+}
+
+

@@ -2,14 +2,14 @@
 
 import { CloseIcon, SearchIcon } from "@/assets/icons";
 import { Modal } from "@/components/ui/modal";
-import algoliasearch from "algoliasearch";
+import algoliasearch from "@/shims/AlgoliaClient";
 import { useState } from "react";
 import {
   Configure,
   connectHits,
   connectSearchBox,
   InstantSearch,
-} from "react-instantsearch-dom";
+} from "@/shims/InstantSearchDom";
 import { CustomHits } from "./custom-hits";
 
 const appID = process.env.NEXT_PUBLIC_ALGOLIA_PROJECT_ID!;

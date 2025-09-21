@@ -1,144 +1,56 @@
-"use client";
+import * as React from "react"
+import * as AccordionPrimitive from "@radix-ui/react-accordion"
+import { ChevronDown } from "lucide-react"
 
-import { createContext, useContext, useId, useState } from "react";
+import { cn } from "@/lib/utils"
 
-type RootContextType = {
-  activeId: string | undefined;
-  toggleActiveId: (id: string) => void;
-};
+const Accordion = AccordionPrimitive.Root
 
-const RootContext = createContext<RootContextType | null>(null);
+const AccordionItem = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
+>(({ className, ...props }, ref) => (
+  <AccordionPrimitive.Item
+    ref={ref}
+    className={cn("border-b", className)}
+    {...props}
+  />
+))
+AccordionItem.displayName = "AccordionItem"
 
-export function useRootContext() {
-  const context = useContext(RootContext);
-  if (!context) {
-    throw new Error(
-      "useRootContext must be used within a RootContext Provider",
-    );
-  }
-  return context;
-}
-
-type AccordionRootProps = {
-  className?: string;
-  children: React.ReactNode;
-};
-
-export function AccordionRoot({ children, className }: AccordionRootProps) {
-  const [activeId, setActiveId] = useState<string>();
-
-  function toggleActiveId(id: string) {
-    setActiveId((currentActiveId) => (currentActiveId === id ? undefined : id));
-  }
-
-  return (
-    <RootContext.Provider
-      value={{
-        activeId: activeId,
-        toggleActiveId,
-      }}
+const AccordionTrigger = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
+>(({ className, children, ...props }, ref) => (
+  <AccordionPrimitive.Header className="flex">
+    <AccordionPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
+        className
+      )}
+      {...props}
     >
-      <div className={className}>{children}</div>
-    </RootContext.Provider>
-  );
-}
+      {children}
+      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+    </AccordionPrimitive.Trigger>
+  </AccordionPrimitive.Header>
+))
+AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
 
-type ItemContextType = {
-  triggerId: string;
-  contentId: string;
-  dataState: "open" | "closed";
-};
+const AccordionContent = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <AccordionPrimitive.Content
+    ref={ref}
+    className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+    {...props}
+  >
+    <div className={cn("pb-4 pt-0", className)}>{children}</div>
+  </AccordionPrimitive.Content>
+))
 
-const ItemContext = createContext<ItemContextType | null>(null);
+AccordionContent.displayName = AccordionPrimitive.Content.displayName
 
-export function useItemContext() {
-  const context = useContext(ItemContext);
-  if (!context) {
-    throw new Error(
-      "useItemContext must be used within a ItemContext Provider",
-    );
-  }
-  return context;
-}
-
-type AccordionItemProps = {
-  children: React.ReactNode;
-  className?: string;
-};
-
-export function AccordionItem({ children, className }: AccordionItemProps) {
-  const triggerId = useId();
-  const contentId = useId();
-
-  const { activeId } = useRootContext();
-
-  const dataState = activeId === triggerId ? "open" : "closed";
-
-  return (
-    <ItemContext.Provider
-      value={{
-        triggerId,
-        contentId,
-        dataState,
-      }}
-    >
-      <div data-state={dataState} className={className}>
-        {children}
-      </div>
-    </ItemContext.Provider>
-  );
-}
-
-type AccordionTriggerProps = {
-  children: React.ReactNode;
-  className?: string;
-};
-
-export function AccordionTrigger({
-  children,
-  className,
-}: AccordionTriggerProps) {
-  const { triggerId, contentId, dataState } = useItemContext();
-  const { toggleActiveId, activeId } = useRootContext();
-
-  return (
-    <h3>
-      <button
-        type="button"
-        id={triggerId}
-        aria-controls={contentId}
-        aria-expanded={activeId === triggerId}
-        data-state={dataState}
-        className={className}
-        onClick={() => toggleActiveId(triggerId)}
-      >
-        {children}
-      </button>
-    </h3>
-  );
-}
-
-type AccordionContentProps = {
-  children: React.ReactNode;
-  className?: string;
-};
-
-export function AccordionContent({
-  children,
-  className,
-}: AccordionContentProps) {
-  const { triggerId, contentId, dataState } = useItemContext();
-
-  return (
-    <div
-      id={contentId}
-      role="region"
-      aria-labelledby={triggerId}
-      data-state={dataState}
-      className={className}
-      hidden={dataState === "closed"}
-    >
-      {dataState === "open" && children}
-    </div>
-  );
-}
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }

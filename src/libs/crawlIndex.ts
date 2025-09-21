@@ -1,4 +1,4 @@
-import algoliasearch from "algoliasearch";
+import algoliasearch from "@/shims/AlgoliaClient";
 import { load } from "cheerio";
 
 const appID = process.env.NEXT_PUBLIC_ALGOLIA_PROJECT_ID ?? "";
