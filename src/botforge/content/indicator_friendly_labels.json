@@ -1,0 +1,563 @@
+{
+  "rsi": {
+    "label": "RSI",
+    "overview": "0–100 momentum oscillator; >50 often bullish bias; extremes mark overbought/oversold.",
+    "outputs": { "value": "RSI" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Bars used to compute average gains/losses." },
+      "source": { "label": "Price Source", "tooltip": "Input price for RSI calculation." },
+      "overbought": { "label": "Overbought", "tooltip": "Upper threshold for potential mean reversion." },
+      "oversold": { "label": "Oversold", "tooltip": "Lower threshold for potential mean reversion." },
+      "midline": { "label": "Midline", "tooltip": "Momentum baseline; above is typically bullish." }
+    }
+  },
+  "ema": {
+    "label": "EMA",
+    "overview": "Exponential Moving Average; weights recent data more for faster trend response.",
+    "outputs": { "value": "EMA" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback window for EMA." },
+      "source": { "label": "Price Source", "tooltip": "Input price for EMA calculation." }
+    }
+  },
+  "atr": {
+    "label": "ATR",
+    "overview": "Average True Range; absolute volatility in price units for sizing and stops.",
+    "outputs": { "value": "ATR" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Bars used to average true range." },
+      "method": { "label": "Smoothing", "tooltip": "Averaging method (RMA/EMA/SMA/WMA)." },
+      "atrMultHint": { "label": "ATR Mult (Hint)", "tooltip": "Common multiple for sizing stops." }
+    }
+  },
+  "sma": {
+    "label": "SMA",
+    "overview": "Simple Moving Average; equal-weight trend baseline.",
+    "outputs": { "value": "SMA" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback window for SMA." },
+      "source": { "label": "Price Source", "tooltip": "Input price for SMA calculation." }
+    }
+  },
+  "wma": {
+    "label": "WMA",
+    "overview": "Weighted Moving Average; linearly emphasizes recent bars.",
+    "outputs": { "value": "WMA" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback window for WMA." },
+      "source": { "label": "Price Source", "tooltip": "Input price for WMA calculation." }
+    }
+  },
+  "hma": {
+    "label": "HMA",
+    "overview": "Hull Moving Average; smooth and responsive trend line.",
+    "outputs": { "value": "HMA" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Primary lookback for HMA." },
+      "source": { "label": "Price Source", "tooltip": "Input price for HMA calculation." }
+    }
+  },
+  "dema": {
+    "label": "DEMA",
+    "overview": "Double Exponential MA; reduces lag vs EMA.",
+    "outputs": { "value": "DEMA" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback window for DEMA." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "tema": {
+    "label": "TEMA",
+    "overview": "Triple Exponential MA; further lag reduction.",
+    "outputs": { "value": "TEMA" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback window for TEMA." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "kama": {
+    "label": "KAMA",
+    "overview": "Kaufman Adaptive MA; adapts speed based on market noise.",
+    "outputs": { "value": "KAMA" },
+    "params": {
+      "length": { "label": "Base Length", "tooltip": "Primary lookback for smoothing." },
+      "fast": { "label": "Fast Length", "tooltip": "Lower bound for adaptation speed." },
+      "slow": { "label": "Slow Length", "tooltip": "Upper bound for adaptation speed." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "vwma": {
+    "label": "VWMA",
+    "overview": "Volume-Weighted MA; weights price by traded volume.",
+    "outputs": { "value": "VWMA" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback window for VWMA." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "macd": {
+    "label": "MACD",
+    "overview": "Trend-momentum via fast/slow EMAs and signal line.",
+    "outputs": { "macd": "MACD", "signal": "Signal", "hist": "Histogram" },
+    "params": {
+      "fastLength": { "label": "Fast Length", "tooltip": "Fast EMA period." },
+      "slowLength": { "label": "Slow Length", "tooltip": "Slow EMA period." },
+      "signalLength": { "label": "Signal Length", "tooltip": "Signal EMA of MACD." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "stochastic": {
+    "label": "Stochastic",
+    "overview": "%K/%D oscillator of close vs range for momentum turns.",
+    "outputs": { "k": "%K", "d": "%D" },
+    "params": {
+      "kLength": { "label": "%K Length", "tooltip": "Lookback for %K." },
+      "dLength": { "label": "%D Smoothing", "tooltip": "Smoothing of %K." },
+      "smooth": { "label": "Smoothing", "tooltip": "Additional smoothing factor." }
+    }
+  },
+  "stoch_rsi": {
+    "label": "Stoch RSI",
+    "overview": "Stochastic of RSI; more sensitive momentum extremes.",
+    "outputs": { "k": "%K (RSI)", "d": "%D (RSI)" },
+    "params": {
+      "rsiLength": { "label": "RSI Length", "tooltip": "RSI lookback for base." },
+      "kLength": { "label": "%K Length", "tooltip": "Lookback for %K of RSI." },
+      "dLength": { "label": "%D Smoothing", "tooltip": "Smoothing of %K." }
+    }
+  },
+  "cci": {
+    "label": "CCI",
+    "overview": "Commodity Channel Index; deviation from typical price.",
+    "outputs": { "value": "CCI" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback for typical price deviation." },
+      "mult": { "label": "Constant", "tooltip": "Scaling constant (default 0.015)." }
+    }
+  },
+  "williams_r": {
+    "label": "Williams %R",
+    "overview": "Momentum oscillator of close vs high/low range.",
+    "outputs": { "value": "Williams %R" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback window." }
+    }
+  },
+  "momentum": {
+    "label": "Momentum",
+    "overview": "Raw price change over N bars.",
+    "outputs": { "value": "Momentum" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Bars between price comparisons." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "roc": {
+    "label": "ROC",
+    "overview": "Rate of Change; percentage change over N bars.",
+    "outputs": { "value": "ROC (%)" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Bars between price comparisons." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "trix": {
+    "label": "TRIX",
+    "overview": "Triple-smoothed ROC; trend-momentum with low noise.",
+    "outputs": { "value": "TRIX" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "EMA length used in triple smoothing." }
+    }
+  },
+  "adx_dmi": {
+    "label": "ADX / DMI",
+    "overview": "Trend strength (ADX) and direction components (+DI / −DI).",
+    "outputs": { "adx": "ADX", "plus": "+DI", "minus": "−DI" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback for DI and ADX smoothing." }
+    }
+  },
+  "aroon": {
+    "label": "Aroon",
+    "overview": "Time since highs/lows to assess trend emergence.",
+    "outputs": { "up": "Aroon Up", "down": "Aroon Down" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Window for highest high / lowest low." }
+    }
+  },
+  "obv": {
+    "label": "OBV",
+    "overview": "On-Balance Volume; cumulative volume flow.",
+    "outputs": { "value": "OBV" },
+    "params": {}
+  },
+  "cmf": {
+    "label": "CMF",
+    "overview": "Chaikin Money Flow; volume-weighted accumulation/distribution.",
+    "outputs": { "value": "CMF" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback for CMF." }
+    }
+  },
+  "mfi": {
+    "label": "MFI",
+    "overview": "Money Flow Index; volume-weighted RSI.",
+    "outputs": { "value": "MFI" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback for MFI." }
+    }
+  },
+  "accum_dist": {
+    "label": "Accum/Dist",
+    "overview": "Accumulation/Distribution; price-volume flow.",
+    "outputs": { "value": "A/D" },
+    "params": {}
+  },
+  "vwap": {
+    "label": "VWAP (Session)",
+    "overview": "Volume-Weighted Average Price for the session.",
+    "outputs": { "value": "VWAP" },
+    "params": {
+      "anchor": { "label": "Anchor", "tooltip": "Session/day/time anchor if configurable." }
+    }
+  },
+  "bollinger_bands": {
+    "label": "Bollinger Bands",
+    "overview": "Moving average with ±k·σ bands for volatility and mean reversion.",
+    "outputs": { "basis": "Basis MA", "upper": "Upper Band", "lower": "Lower Band", "width": "Band Width" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "MA period for basis." },
+      "mult": { "label": "Std Dev Mult", "tooltip": "Band distance in standard deviations." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "bollinger_percent_b": {
+    "label": "%B",
+    "overview": "Position of price within Bollinger Bands (0–1 scale).",
+    "outputs": { "value": "%B" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Basis MA period." },
+      "mult": { "label": "Std Dev Mult", "tooltip": "Band distance in SD." }
+    }
+  },
+  "bollinger_bandwidth": {
+    "label": "Bandwidth",
+    "overview": "Relative Bollinger band width; volatility measure.",
+    "outputs": { "value": "Bandwidth" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Basis MA period." },
+      "mult": { "label": "Std Dev Mult", "tooltip": "Band distance in SD." }
+    }
+  },
+  "keltner_channels": {
+    "label": "Keltner Channels",
+    "overview": "EMA basis with ATR-multiple envelopes for trend and pullbacks.",
+    "outputs": { "basis": "EMA Basis", "upper": "Upper Channel", "lower": "Lower Channel" },
+    "params": {
+      "length": { "label": "EMA Length", "tooltip": "Length for basis EMA." },
+      "atrLength": { "label": "ATR Length", "tooltip": "ATR lookback for channel distance." },
+      "atrMult": { "label": "ATR Mult", "tooltip": "Channel distance in ATRs." }
+    }
+  },
+  "donchian_channels": {
+    "label": "Donchian Channels",
+    "overview": "Highest high / lowest low breakout bands.",
+    "outputs": { "upper": "Upper Channel", "lower": "Lower Channel", "mid": "Midline" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback for channel highs/lows." }
+    }
+  },
+  "supertrend": {
+    "label": "Supertrend",
+    "overview": "ATR-based trailing trend line that flips on breaks.",
+    "outputs": { "value": "Supertrend", "direction": "Direction" },
+    "params": {
+      "atrLength": { "label": "ATR Length", "tooltip": "ATR lookback." },
+      "atrMult": { "label": "ATR Mult", "tooltip": "Multiplier for bands." }
+    }
+  },
+  "parabolic_sar": {
+    "label": "Parabolic SAR",
+    "overview": "Stop-and-reverse trail for trend following.",
+    "outputs": { "value": "SAR" },
+    "params": {
+      "step": { "label": "Step", "tooltip": "Acceleration step." },
+      "maxStep": { "label": "Max Step", "tooltip": "Acceleration cap." }
+    }
+  },
+  "dpo": {
+    "label": "DPO",
+    "overview": "Detrended Price Oscillator; cycles without trend.",
+    "outputs": { "value": "DPO" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Detrending lookback." }
+    }
+  },
+  "rvi": {
+    "label": "RVI",
+    "overview": "Relative Vigor Index; momentum using open-close vs range.",
+    "outputs": { "value": "RVI", "signal": "Signal" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Smoothing lookback." }
+    }
+  },
+  "tsi": {
+    "label": "TSI",
+    "overview": "True Strength Index; double-smoothed momentum.",
+    "outputs": { "value": "TSI", "signal": "Signal" },
+    "params": {
+      "short": { "label": "Short", "tooltip": "First smoothing length." },
+      "long": { "label": "Long", "tooltip": "Second smoothing length." }
+    }
+  },
+  "elder_ray": {
+    "label": "Elder Ray",
+    "overview": "Bull/Bear Power relative to an EMA.",
+    "outputs": { "bull": "Bull Power", "bear": "Bear Power" },
+    "params": {
+      "length": { "label": "EMA Length", "tooltip": "EMA used as baseline." }
+    }
+  },
+  "cmo": {
+    "label": "CMO",
+    "overview": "Chande Momentum Oscillator; momentum bounded ±100.",
+    "outputs": { "value": "CMO" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback window." }
+    }
+  },
+  "awesome_oscillator": {
+    "label": "Awesome Oscillator",
+    "overview": "SMA(5)-SMA(34) of median price; momentum shifts.",
+    "outputs": { "value": "AO" },
+    "params": {}
+  },
+  "bop": {
+    "label": "Balance of Power",
+    "overview": "Assess buying vs selling pressure within bars.",
+    "outputs": { "value": "BOP" },
+    "params": {}
+  },
+  "pivot_points": {
+    "label": "Pivot Points",
+    "overview": "Classic intraday S/R levels (Classic, Fib, Camarilla).",
+    "outputs": { "pp": "Pivot", "r1": "R1", "r2": "R2", "r3": "R3", "s1": "S1", "s2": "S2", "s3": "S3" },
+    "params": {
+      "mode": { "label": "Mode", "tooltip": "Formula type (Classic/Fib/Camarilla/...)." }
+    }
+  },
+  "zscore": {
+    "label": "Z-Score",
+    "overview": "Standardized deviation from mean for N bars.",
+    "outputs": { "value": "Z-Score" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback for mean/std dev." },
+      "source": { "label": "Price Source", "tooltip": "Input series to standardize." }
+    }
+  },
+  "ulcer_index": {
+    "label": "Ulcer Index",
+    "overview": "Drawdown-focused volatility measure.",
+    "outputs": { "value": "Ulcer Index" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback for drawdown calc." }
+    }
+  },
+  "stddev": {
+    "label": "Std Dev (Rolling)",
+    "overview": "Rolling standard deviation; volatility.",
+    "outputs": { "value": "Std Dev" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Window for volatility." },
+      "source": { "label": "Price Source", "tooltip": "Input series." }
+    }
+  },
+  "ma_envelopes": {
+    "label": "MA Envelopes",
+    "overview": "Percentage bands around a moving average.",
+    "outputs": { "basis": "MA Basis", "upper": "Upper Envelope", "lower": "Lower Envelope" },
+    "params": {
+      "length": { "label": "MA Length", "tooltip": "Moving average length." },
+      "offsetPct": { "label": "Band %", "tooltip": "Envelope distance as percent." },
+      "source": { "label": "Price Source", "tooltip": "Input price." }
+    }
+  },
+  "fractals": {
+    "label": "Fractals",
+    "overview": "Bill Williams swing points for S/R and structure.",
+    "outputs": { "up": "Fractal High", "down": "Fractal Low" },
+    "params": {
+      "leftBars": { "label": "Left Bars", "tooltip": "Bars to the left for a pivot." },
+      "rightBars": { "label": "Right Bars", "tooltip": "Bars to the right for a pivot." }
+    }
+  },
+  "ichimoku": {
+    "label": "Ichimoku Cloud",
+    "overview": "Multi-line trend/structure system (conversion/base/lagging/cloud).",
+    "outputs": {
+      "tenkan": "Conversion (Tenkan)",
+      "kijun": "Base (Kijun)",
+      "spanA": "Leading Span A",
+      "spanB": "Leading Span B",
+      "chikou": "Lagging (Chikou)"
+    },
+    "params": {
+      "tenkan": { "label": "Tenkan", "tooltip": "Conversion line length." },
+      "kijun": { "label": "Kijun", "tooltip": "Base line length." },
+      "senkou": { "label": "Senkou", "tooltip": "Cloud span B length." }
+    }
+  },
+  "fvg": {
+    "label": "Fair Value Gap (FVG)",
+    "overview": "Three-candle imbalance; potential return-to-fill or breakout zones.",
+    "outputs": {
+      "last.direction": "Gap Direction",
+      "last.upper": "Gap Upper (price)",
+      "last.lower": "Gap Lower (price)",
+      "last.mid": "Gap Mid (price)",
+      "last.size": "Gap Size",
+      "last.ageBars": "Gap Age (bars)",
+      "last.isOpen": "Gap Open?",
+      "last.fillPct": "Gap Fill (%)"
+    },
+    "params": {
+      "minSizeTicks": { "label": "Min Size (ticks)", "tooltip": "Smallest gap to track." },
+      "maxAge": { "label": "Max Age (bars)", "tooltip": "Discard gaps older than this." }
+    }
+  },
+  "order_block": {
+    "label": "Order Block",
+    "overview": "Institutional demand/supply blocks for retests.",
+    "outputs": {
+      "last.type": "Block Type",
+      "last.upper": "Block Upper",
+      "last.lower": "Block Lower",
+      "last.mid": "Block Mid",
+      "last.strength": "Block Strength"
+    },
+    "params": {
+      "minTouches": { "label": "Min Touches", "tooltip": "Minimum confirmation touches." },
+      "lookback": { "label": "Lookback", "tooltip": "Scan window for blocks." }
+    }
+  },
+  "breaker_block": {
+    "label": "Breaker Block",
+    "overview": "Invalidated OB used as a reversal/continuation level.",
+    "outputs": {
+      "last.upper": "Breaker Upper",
+      "last.lower": "Breaker Lower",
+      "last.mid": "Breaker Mid",
+      "last.confirmed": "Confirmed?"
+    },
+    "params": {
+      "lookback": { "label": "Lookback", "tooltip": "Scan window for breakers." }
+    }
+  },
+  "bos_choch": {
+    "label": "BOS / CHOCH",
+    "overview": "Break of Structure / Change of Character state and key levels.",
+    "outputs": {
+      "state": "Structure State",
+      "lastSwingHigh": "Last Swing High",
+      "lastSwingLow": "Last Swing Low"
+    },
+    "params": {
+      "swingLen": { "label": "Swing Length", "tooltip": "Bars for swing detection." }
+    }
+  },
+  "liquidity_sweep": {
+    "label": "Liquidity Sweep",
+    "overview": "Stop runs through equal highs/lows; potential reversals.",
+    "outputs": {
+      "last.side": "Sweep Side",
+      "last.cleared": "Cleared?",
+      "last.ageBars": "Age (bars)"
+    },
+    "params": {
+      "lookback": { "label": "Lookback", "tooltip": "Scan window for sweeps." }
+    }
+  },
+  "equal_highs_lows": {
+    "label": "Equal Highs/Lows",
+    "overview": "Detect clustered equal highs or lows (liquidity).",
+    "outputs": {
+      "last.type": "Equal Type",
+      "last.level": "Equal Level"
+    },
+    "params": {
+      "tolerance": { "label": "Tolerance", "tooltip": "Price closeness for equality." }
+    }
+  },
+  "pd_zones": {
+    "label": "Premium/Discount Zones",
+    "overview": "Midline discount/premium arrays for directional bias.",
+    "outputs": {
+      "inPremium": "In Premium?",
+      "inDiscount": "In Discount?",
+      "mid": "PD Midline"
+    },
+    "params": {}
+  },
+  "anchored_vwap": {
+    "label": "Anchored VWAP",
+    "overview": "VWAP anchored to a specific event/point.",
+    "outputs": { "value": "Anchored VWAP" },
+    "params": {
+      "anchor": { "label": "Anchor", "tooltip": "Date/point to anchor from." },
+      "stdevMult": { "label": "Band SD Mult", "tooltip": "Deviation band distance." }
+    }
+  },
+  "qqe": {
+    "label": "QQE",
+    "overview": "Quantitative Qualitative Estimation; smoothed RSI-based signals.",
+    "outputs": { "value": "QQE", "signal": "Signal" },
+    "params": {
+      "rsiLength": { "label": "RSI Length", "tooltip": "Base RSI period." },
+      "smoothing": { "label": "Smoothing", "tooltip": "QQE smoothing factor." }
+    }
+  },
+  "connors_rsi": {
+    "label": "Connors RSI",
+    "overview": "Composite RSI of price, streak, and rank; short-term mean reversion.",
+    "outputs": { "value": "Connors RSI" },
+    "params": {
+      "rsiLength": { "label": "RSI Length", "tooltip": "First component length." },
+      "streakLength": { "label": "Streak Length", "tooltip": "Up/Down streak length." },
+      "rankLength": { "label": "Rank Length", "tooltip": "Percent rank lookback." }
+    }
+  },
+  "fisher_transform": {
+    "label": "Fisher Transform",
+    "overview": "Normalized price transform highlighting turning points.",
+    "outputs": { "value": "Fisher", "signal": "Signal" },
+    "params": {
+      "length": { "label": "Length", "tooltip": "Lookback for transform." }
+    }
+  },
+  "mama_fama": {
+    "label": "MAMA/FAMA",
+    "overview": "MESA adaptive moving averages; responsive trend pair.",
+    "outputs": { "mama": "MAMA", "fama": "FAMA" },
+    "params": {
+      "fastLimit": { "label": "Fast Limit", "tooltip": "Upper bound for adaptivity." },
+      "slowLimit": { "label": "Slow Limit", "tooltip": "Lower bound for adaptivity." }
+    }
+  },
+  "hilbert_trendline": {
+    "label": "Hilbert Trendline",
+    "overview": "Instantaneous trendline via Hilbert transform.",
+    "outputs": { "value": "Trendline" },
+    "params": {}
+  },
+  "smt_divergence": {
+    "label": "SMT Divergence",
+    "overview": "Inter-market momentum divergence detection.",
+    "outputs": { "value": "Divergence Score", "signal": "Signal" },
+    "params": {
+      "peerSymbol": { "label": "Peer Symbol", "tooltip": "Reference market to compare." },
+      "length": { "label": "Length", "tooltip": "Window for divergence scan." }
+    }
+  }
+}
+
+

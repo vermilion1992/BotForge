@@ -42,6 +42,13 @@ export const NAV_DATA = [
         items: [],
       },
       {
+        title: "Strategy Builder",
+        url: "/strategy-builder",
+        icon: Icons.StrategyBuilder,
+        items: [],
+        isPro: true,
+      },
+      {
         title: "Profile",
         url: "/profile",
         icon: Icons.User,

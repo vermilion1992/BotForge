@@ -1,0 +1,160 @@
+{
+  "identity": {
+    "id": "rsi",
+    "label": "RSI (Relative Strength Index)",
+    "tier": "CORE"
+  },
+  "docs": {
+    "category": "Momentum",
+    "tags": ["Momentum", "Oscillator", "Mean Reversion", "Filter"],
+    "blurb": "RSI measures recent price gains vs. losses on a bounded 0–100 scale. Useful for momentum confirmation, pullback entries, and mean reversion extremes.",
+    "longSummary": "The Relative Strength Index (RSI) compares the magnitude of recent gains to recent losses over a fixed lookback window, returning a value between 0 and 100. Readings above 70 are commonly considered overbought and readings below 30 oversold, though thresholds are context-dependent. RSI can be used for momentum continuation (e.g., holding above 50) or for mean-reversion entries when price snaps back from extremes. Combining RSI with trend filters (e.g., EMA/SMA) helps avoid counter-trend signals. Multi-timeframe confirmation can further reduce noise.",
+    "mathSummary": "RSI = 100 − 100 / (1 + RS), where RS = (Average Gain over N periods) / (Average Loss over N periods).",
+    "references": ["https://www.investopedia.com/terms/r/rsi.asp"]
+  },
+  "params": {
+    "length": { "type": "number", "label": "Length", "default": 14, "min": 2, "max": 100, "step": 1, "unit": "bars" },
+    "source": { "type": "enum", "label": "Price Source", "enum": ["close","open","high","low","hl2","ohlc4"], "default": "close" },
+    "overbought": { "type": "number", "label": "Overbought", "default": 70, "min": 50, "max": 100, "step": 1 },
+    "oversold": { "type": "number", "label": "Oversold", "default": 30, "min": 0, "max": 50, "step": 1 },
+    "midline": { "type": "number", "label": "Midline", "default": 50, "min": 0, "max": 100, "step": 1 }
+  },
+  "outputs": ["value", "overboughtLine", "oversoldLine", "midline"],
+  "supportedOperators": [">", ">=", "<", "<=", "==", "crosses_above", "crosses_below", "rising", "falling", "within", "outside"],
+  "signals": [
+    { "id": "rsi_cross_up_from_oversold", "label": "RSI crosses up from oversold", "direction": "bullish", "when": { "left": "value", "operator": "crosses_above", "right": "params.oversold" } },
+    { "id": "rsi_cross_down_from_overbought", "label": "RSI crosses down from overbought", "direction": "bearish", "when": { "left": "value", "operator": "crosses_below", "right": "params.overbought" } },
+    { "id": "rsi_above_midline", "label": "RSI above midline", "direction": "bullish", "when": { "left": "value", "operator": ">", "right": "params.midline" } },
+    { "id": "rsi_below_midline", "label": "RSI below midline", "direction": "bearish", "when": { "left": "value", "operator": "<", "right": "params.midline" } }
+  ],
+  "ui": {
+    "tooltips": {
+      "_indicator": "RSI measures the ratio of average gains to average losses over a period (0–100). Use with thresholds or midline to frame momentum vs. mean reversion.",
+      "length": "Lookback window used to compute average gains/losses.",
+      "source": "Price input used to compute changes.",
+      "overbought": "Threshold above which the market is considered overbought.",
+      "oversold": "Threshold below which the market is considered oversold.",
+      "midline": "Momentum baseline (commonly 50). Above = bullish bias; below = bearish."
+    }
+  },
+  "constraints": { "recommendedTimeframes": ["5m", "15m", "1h", "4h", "1d"] },
+  "examples": [
+    { "name": "RSI Conservative Mean Revert", "presetRef": "rsi_normal_conservative" },
+    { "name": "RSI Balanced Momentum", "presetRef": "rsi_normal_balanced" },
+    { "name": "RSI Aggressive Momentum", "presetRef": "rsi_normal_aggressive" },
+    { "name": "RSI Hero: Reversion + Guard", "presetRef": "rsi_hero_reversion_guarded" },
+    { "name": "RSI Hero: Momentum MTF", "presetRef": "rsi_hero_momentum_mtf" },
+    { "name": "RSI Hero: Regime Filter", "presetRef": "rsi_hero_filter_regime" }
+  ],
+  "riskTemplates": {
+    "atrStop": { "enabledDefault": false, "tooltip": "Places a protective stop using ATR multiple.", "atrPeriodDefault": 14, "atrMultDefault": 2.0 },
+    "trailingTP": { "enabledDefault": false, "tooltip": "Enables trailing profit steps after price moves in your favor.", "modeDefault": "percent", "stepPctDefault": 1.0, "takeProfitStepsDefault": [25, 50, 75] },
+    "breakeven": { "enabledDefault": false, "tooltip": "Moves stop to breakeven after a chosen risk multiple.", "triggerRRDefault": 1.0, "offsetPctDefault": 0.1 },
+    "timeStop": { "enabledDefault": false, "tooltip": "Closes trades after a fixed number of bars.", "barsDefault": 288 }
+  },
+  "presets": [
+    {
+      "id": "rsi_normal_conservative",
+      "label": "RSI Conservative Mean Revert",
+      "presetTier": "Normal",
+      "riskProfile": "Conservative",
+      "designIntent": "MeanReversion",
+      "extras": [],
+      "indicators": [
+        { "id": "rsi", "params": { "length": 14, "overbought": 68, "oversold": 32, "midline": 50 } },
+        { "id": "sma", "params": { "length": 200 } }
+      ],
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 0.75, "leverage": 1 },
+        "exits": { "defaultSLPct": 3, "defaultTPPct": 6 }
+      }
+    },
+    {
+      "id": "rsi_normal_balanced",
+      "label": "RSI Balanced Momentum",
+      "presetTier": "Normal",
+      "riskProfile": "Balanced",
+      "designIntent": "Momentum",
+      "extras": [],
+      "indicators": [
+        { "id": "rsi", "params": { "length": 14, "overbought": 70, "oversold": 30, "midline": 50 } },
+        { "id": "ema", "params": { "length": 50 } }
+      ],
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 1.5, "leverage": 2 },
+        "exits": { "defaultSLPct": 5, "defaultTPPct": 10 }
+      }
+    },
+    {
+      "id": "rsi_normal_aggressive",
+      "label": "RSI Aggressive Momentum",
+      "presetTier": "Normal",
+      "riskProfile": "Aggressive",
+      "designIntent": "Momentum",
+      "extras": [],
+      "indicators": [
+        { "id": "rsi", "params": { "length": 12, "overbought": 72, "oversold": 28, "midline": 50 } },
+        { "id": "ema", "params": { "length": 21 } }
+      ],
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 3, "leverage": 3 },
+        "exits": { "defaultSLPct": 7, "defaultTPPct": 14 }
+      }
+    },
+    {
+      "id": "rsi_hero_reversion_guarded",
+      "label": "RSI Hero — Reversion + Guard",
+      "presetTier": "Hero",
+      "riskProfile": "Balanced",
+      "designIntent": "MeanReversion",
+      "extras": ["riskGuard", "signalCooldown"],
+      "cooldownBars": 5,
+      "indicators": [
+        { "id": "rsi", "params": { "length": 14, "overbought": 67, "oversold": 33, "midline": 50 } },
+        { "id": "atr", "params": { "length": 14 } },
+        { "id": "sma", "params": { "length": 200 } }
+      ],
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 1.25, "leverage": 2 },
+        "exits": { "defaultSLPct": 4, "defaultTPPct": 8 }
+      }
+    },
+    {
+      "id": "rsi_hero_momentum_mtf",
+      "label": "RSI Hero — Momentum MTF",
+      "presetTier": "Hero",
+      "riskProfile": "Aggressive",
+      "designIntent": "Momentum",
+      "extras": ["multiTFConfirm", "confirmationIndicator"],
+      "cooldownBars": 0,
+      "indicators": [
+        { "id": "rsi", "params": { "length": 12, "overbought": 70, "oversold": 30, "midline": 50 } },
+        { "id": "ema", "params": { "length": 50 } }
+      ],
+      "mtf": { "confirmTF": "4h", "rule": "RSI.value > 50 AND EMA(50) rising" },
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 3.0, "leverage": 3 },
+        "exits": { "defaultSLPct": 6, "defaultTPPct": 12 }
+      }
+    },
+    {
+      "id": "rsi_hero_filter_regime",
+      "label": "RSI Hero — Regime Filter",
+      "presetTier": "Hero",
+      "riskProfile": "Conservative",
+      "designIntent": "Filter",
+      "extras": ["regimeFilter", "confirmationIndicator"],
+      "cooldownBars": 2,
+      "indicators": [
+        { "id": "rsi", "params": { "length": 14, "overbought": 70, "oversold": 30, "midline": 50 } },
+        { "id": "sma", "params": { "length": 200 } }
+      ],
+      "regime": { "bias": "long_only", "rule": "Price > SMA200 AND RSI.value > 50" },
+      "riskDefaults": {
+        "positionSizing": { "riskPerTradePct": 0.9, "leverage": 1 },
+        "exits": { "defaultSLPct": 3.5, "defaultTPPct": 7 }
+      }
+    }
+  ],
+  "deprecated": false
+}

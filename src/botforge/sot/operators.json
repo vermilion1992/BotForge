@@ -1,0 +1,14 @@
+[
+  {"id": ">", "label": ">", "blurb": "Left operand greater than right."},
+  {"id": ">=", "label": ">=", "blurb": "Left operand greater or equal."},
+  {"id": "<", "label": "<", "blurb": "Left operand less than right."},
+  {"id": "<=", "label": "<=", "blurb": "Left operand less or equal."},
+  {"id": "==", "label": "==", "blurb": "Operands equal."},
+  {"id": "crosses_above", "label": "Crosses Above", "blurb": "A crosses above B."},
+  {"id": "crosses_below", "label": "Crosses Below", "blurb": "A crosses below B."},
+  {"id": "rising", "label": "Rising", "blurb": "Series increasing over window."},
+  {"id": "falling", "label": "Falling", "blurb": "Series decreasing over window."},
+  {"id": "within", "label": "Within", "blurb": "Value within bounds."},
+  {"id": "outside", "label": "Outside", "blurb": "Value outside bounds."}
+]
+

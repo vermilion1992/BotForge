@@ -1,4 +1,8 @@
-/** @type {import("next").NextConfig} */
+import path from "path";
+import { fileURLToPath } from "url";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     // domains: ["localhost"],
@@ -29,6 +33,24 @@ const nextConfig = {
         port: "",
       },
     ],
+  },
+  // ✅ Turbopack config for Next ≤ 15.2 lives here
+  experimental: {
+    turbo: {
+      resolveAlias: {
+        "react-quill": "/src/shims/ReactQuill.tsx",
+      },
+    },
+  },
+
+  // ✅ Webpack aliases (fallback / if you ever run webpack)
+  webpack: (config) => {
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      "react-quill": path.resolve(__dirname, "src/shims/ReactQuill.tsx"),
+    };
+    return config;
   },
 };
 

@@ -1,0 +1,15 @@
+{
+  "marketType": "spot",
+  "pairs": ["BTC/USDT","ETH/USDT"],
+  "timeframe": "15m",
+  "strategy": { "label": "EMA Crossover Pro" },
+  "indicators": [
+    { "id": "ema", "presetRef": "n_momentum", "params": { "lengthFast": 9, "lengthSlow": 21 } },
+    { "id": "rsi", "presetRef": "n_filter", "params": { "length": 14, "overbought": 70, "oversold": 30 } }
+  ],
+  "risk": { "riskPerTradePct": 1.5, "leverage": 3 }
+}
+
+
+
+

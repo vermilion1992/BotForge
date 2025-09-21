@@ -1,0 +1,22 @@
+{
+  "steps": [
+    {"id":"market","title":"Market Type"},
+    {"id":"pairs","title":"Trading Pairs"},
+    {"id":"strategy_indicators","title":"Strategy & Indicators"},
+    {"id":"advanced","title":"Advanced Settings"},
+    {"id":"risk","title":"Risk Management"},
+    {"id":"timeframe","title":"Timeframe"},
+    {"id":"backtest","title":"Backtest"},
+    {"id":"results","title":"Results"}
+  ],
+  "completeCriteria": {
+    "market": ["marketType"],
+    "pairs": ["pairs"],
+    "strategy_indicators": ["strategyId","indicatorSelections"],
+    "advanced": [],
+    "risk": ["riskSettings"],
+    "timeframe": ["timeframe"],
+    "backtest": [],
+    "results": ["exportedOnce"]
+  }
+}
