@@ -5,6 +5,8 @@ import { RISK_TILE_COPY, RISK_PRESETS, RiskTier, RiskVariant } from "@/botforge/
 import { summarizeFromDraft, applyDraftToAdvanced, summarizeRiskConfig } from "@/botforge/lib/risk";
 import { validateRiskDraft, normalizeAllocations, sortAndSpaceTargets, disableTrailing, type Validation } from "@/botforge/lib/risk_validate";
 import { BarChart3, Settings, Target } from "lucide-react";
+import { FieldWithTooltip } from "@/components/ui/FieldWithTooltip";
+import { useTooltips } from "@/hooks/useTooltips";
 
 /** Styling:
  * - Reuse same card look as Page-3 strategy tiles: rounded-2xl, border, subtle shadow, hover treatments.
@@ -13,6 +15,7 @@ import { BarChart3, Settings, Target } from "lucide-react";
 
 export default function RiskControlsSection() {
   const { advanced, setAdvanced } = useBuilderStore() as any;
+  const { getTooltip } = useTooltips();
 
   const [expandedTier, setExpandedTier] = useState<RiskTier | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<RiskVariant>("balanced");
@@ -39,12 +42,21 @@ export default function RiskControlsSection() {
       setExpandedTier(null);
       setDraft(null);
     } else {
-      // Select and expand
+      // Just select, don't expand
       setSelectedTier(tier);
-      setExpandedTier(tier);
-      setSelectedVariant("balanced");
-      setDraft(clonePreset(tier, "balanced"));
+      // Don't set expandedTier here anymore
     }
+  };
+
+  const handleLearnMoreClick = (tier: RiskTier) => {
+    // First select the tier if not already selected
+    if (selectedTier !== tier) {
+      setSelectedTier(tier);
+    }
+    // Then expand it
+    setExpandedTier(tier);
+    setSelectedVariant("balanced");
+    setDraft(clonePreset(tier, "balanced"));
   };
 
   const handleBack = () => {
@@ -104,10 +116,15 @@ export default function RiskControlsSection() {
   };
 
   return (
-    <div className="mt-6">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Risk Controls</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Exits only — does not change indicators or entry rules.</p>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Exit Conditions</h3>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Exits only — does not change indicators or entry rules.</p>
+        </div>
       </div>
       
       <div>
@@ -135,6 +152,7 @@ export default function RiskControlsSection() {
                 tier={tier}
                 isSelected={selectedTier === tier}
                 onClick={() => handleTileClick(tier)}
+                onLearnMoreClick={() => handleLearnMoreClick(tier)}
               />
             ))}
           </div>
@@ -144,7 +162,7 @@ export default function RiskControlsSection() {
   );
 }
 
-function CompactTile({ tier, isSelected, onClick }: { tier: RiskTier; isSelected: boolean; onClick: () => void }) {
+function CompactTile({ tier, isSelected, onClick, onLearnMoreClick }: { tier: RiskTier; isSelected: boolean; onClick: () => void; onLearnMoreClick: () => void }) {
   const copy = RISK_TILE_COPY[tier];
   const summary = summarizeRiskConfig(tier, "balanced");
 
@@ -159,14 +177,15 @@ function CompactTile({ tier, isSelected, onClick }: { tier: RiskTier; isSelected
   };
 
   return (
-    <div className={`rounded-2xl border shadow-sm transition-all duration-200 cursor-pointer ${
+    <div className={`rounded-2xl shadow-sm transition-all duration-200 cursor-pointer ${
       isSelected 
-        ? "ring-2 ring-blue-500/40 bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600" 
-        : "bg-white dark:bg-neutral-900/60 hover:shadow-md hover:border-gray-300 dark:hover:border-neutral-600"
+        ? "border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20" 
+        : "border bg-white dark:bg-neutral-900/60 hover:shadow-md hover:border-gray-300 dark:hover:border-neutral-600"
     }`}>
-      <button onClick={onClick} className="w-full text-left p-4">
+      <div className="p-4">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          {/* Main tile content - clickable for selection */}
+          <button onClick={onClick} className="flex items-center gap-3 flex-1 text-left">
             <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
               {getIcon(tier)}
             </div>
@@ -174,12 +193,20 @@ function CompactTile({ tier, isSelected, onClick }: { tier: RiskTier; isSelected
               <div className="text-base font-semibold text-gray-900 dark:text-white">{copy.title}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">{copy.blurb}</div>
             </div>
-          </div>
-          <div className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-full hover:bg-blue-700 transition-colors whitespace-nowrap">
+          </button>
+          
+          {/* Separate Learn More button */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onLearnMoreClick();
+            }}
+            className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-full hover:bg-blue-700 transition-colors whitespace-nowrap"
+          >
             Learn More
-          </div>
+          </button>
         </div>
-      </button>
+      </div>
     </div>
   );
 }
@@ -213,6 +240,7 @@ function ExpandedTile({
   onFixAll: () => void;
   setDraft: (d: any) => void; 
 }) {
+  const { getTooltip } = useTooltips();
   const copy = RISK_TILE_COPY[tier];
   const variants: RiskVariant[] = ["conservative", "balanced", "aggressive"];
   const summary = useMemo(() => summarizeFromDraft(tier, variant, draft), [tier, variant, draft]);
@@ -318,7 +346,7 @@ function ExpandedTile({
             <p className="text-sm text-gray-600 dark:text-gray-300">{summary}</p>
           </div>
           
-          <Editors tier={tier} draft={draft} setDraft={setDraft} />
+          <Editors tier={tier} draft={draft} setDraft={setDraft} getTooltip={getTooltip} />
         </div>
 
         {/* Validation Messages */}
@@ -418,7 +446,7 @@ function ExpandedTile({
   );
 }
 
-function Editors({ tier, draft, setDraft }: { tier: RiskTier; draft: any; setDraft: (d:any)=>void }) {
+function Editors({ tier, draft, setDraft, getTooltip }: { tier: RiskTier; draft: any; setDraft: (d:any)=>void; getTooltip: (path: string) => string }) {
   const onNum = (path: string, v: number|undefined) => {
     const next = structuredClone(draft || {});
     deepSet(next, path, (isNum(v) ? Number(v) : undefined));
@@ -444,98 +472,285 @@ function Editors({ tier, draft, setDraft }: { tier: RiskTier; draft: any; setDra
       { (tier === "advanced" || tier === "expert") && (
         <>
           <div className="grid grid-cols-3 gap-3">
-            { [0,1,2].map(i => (
-              <NumField key={`tp-${i}`} label={`TP${i+1} (%)`} value={draft?.exits?.multiTP?.targets?.[i]?.pct} onChange={(v)=>{
-                const next = structuredClone(draft); ensureTargets(next);
-                next.exits.multiTP.targets[i].pct = isNum(v) ? Number(v) : undefined; setDraft(next);
-              }} />
-            )) }
+            <FieldWithTooltip label="TP1 (%)" tooltip={getTooltip('step4.exitControls.tp1')}>
+              <input
+                type="number"
+                step="0.1"
+                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white"
+                value={draft?.exits?.multiTP?.targets?.[0]?.pct ?? ""}
+                onChange={(e) => {
+                  const next = structuredClone(draft); ensureTargets(next);
+                  const val = e.target.value;
+                  next.exits.multiTP.targets[0].pct = val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val));
+                  setDraft(next);
+                }}
+              />
+            </FieldWithTooltip>
+            <FieldWithTooltip label="TP2 (%)" tooltip={getTooltip('step4.exitControls.tp2')}>
+              <input
+                type="number"
+                step="0.1"
+                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white"
+                value={draft?.exits?.multiTP?.targets?.[1]?.pct ?? ""}
+                onChange={(e) => {
+                  const next = structuredClone(draft); ensureTargets(next);
+                  const val = e.target.value;
+                  next.exits.multiTP.targets[1].pct = val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val));
+                  setDraft(next);
+                }}
+              />
+            </FieldWithTooltip>
+            <FieldWithTooltip label="TP3 (%)" tooltip={getTooltip('step4.exitControls.tp3')}>
+              <input
+                type="number"
+                step="0.1"
+                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white"
+                value={draft?.exits?.multiTP?.targets?.[2]?.pct ?? ""}
+                onChange={(e) => {
+                  const next = structuredClone(draft); ensureTargets(next);
+                  const val = e.target.value;
+                  next.exits.multiTP.targets[2].pct = val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val));
+                  setDraft(next);
+                }}
+              />
+            </FieldWithTooltip>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            { [0,1,2].map(i => (
-              <NumField key={`alloc-${i}`} label={`TP${i+1} Allocation (%)`} value={draft?.exits?.multiTP?.targets?.[i]?.sizePct} onChange={(v)=>{
-                const next = structuredClone(draft); ensureTargets(next);
-                next.exits.multiTP.targets[i].sizePct = isNum(v) ? Number(v) : undefined; setDraft(next);
-              }} />
-            )) }
+            <FieldWithTooltip label="TP1 Allocation (%)" tooltip={getTooltip('step4.exitControls.tp1Allocation')}>
+              <input
+                type="number"
+                step="0.1"
+                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white"
+                value={draft?.exits?.multiTP?.targets?.[0]?.sizePct ?? ""}
+                onChange={(e) => {
+                  const next = structuredClone(draft); ensureTargets(next);
+                  const val = e.target.value;
+                  next.exits.multiTP.targets[0].sizePct = val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val));
+                  setDraft(next);
+                }}
+              />
+            </FieldWithTooltip>
+            <FieldWithTooltip label="TP2 Allocation (%)" tooltip={getTooltip('step4.exitControls.tp2Allocation')}>
+              <input
+                type="number"
+                step="0.1"
+                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white"
+                value={draft?.exits?.multiTP?.targets?.[1]?.sizePct ?? ""}
+                onChange={(e) => {
+                  const next = structuredClone(draft); ensureTargets(next);
+                  const val = e.target.value;
+                  next.exits.multiTP.targets[1].sizePct = val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val));
+                  setDraft(next);
+                }}
+              />
+            </FieldWithTooltip>
+            <FieldWithTooltip label="TP3 Allocation (%)" tooltip={getTooltip('step4.exitControls.tp3Allocation')}>
+              <input
+                type="number"
+                step="0.1"
+                className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white"
+                value={draft?.exits?.multiTP?.targets?.[2]?.sizePct ?? ""}
+                onChange={(e) => {
+                  const next = structuredClone(draft); ensureTargets(next);
+                  const val = e.target.value;
+                  next.exits.multiTP.targets[2].sizePct = val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val));
+                  setDraft(next);
+                }}
+              />
+            </FieldWithTooltip>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <NumFieldWithToggle 
-              label="Stop Loss (%)" 
-              value={draft?.exits?.defaultSLPct} 
-              onChange={v=>onNum("exits.defaultSLPct", v)} 
-              checked={!!draft?.exits?.defaultSLPct}
-              onToggle={(enabled)=>{
-                const next = structuredClone(draft || {});
-                if (enabled) {
-                  // Disable ATR Stop when enabling Stop Loss
-                  next.atrStop = { ...next.atrStop, enabled: false };
-                  next.exits = { ...next.exits, defaultSLPct: 2 };
-                } else {
-                  next.exits = { ...next.exits, defaultSLPct: undefined };
-                }
-                setDraft(next);
-              }}
-            />
-            <NumFieldWithToggle 
-              label="Breakeven Offset (%)" 
-              value={draft?.breakeven?.offsetPct} 
-              onChange={v=>onNum("breakeven.offsetPct", v)} 
-              checked={draft?.breakeven?.enabled !== false}
-              onToggle={on=>onToggle("breakeven.enabled", on)}
-              hint="Applied when TP1 fills"
-            />
-            <NumFieldWithToggle 
-              label="Time Stop (bars)" 
-              value={draft?.timeStop?.bars} 
-              onChange={v=>onNum("timeStop.bars", v)} 
-              checked={draft?.timeStop?.enabled !== false}
-              onToggle={on=>onToggle("timeStop.enabled", on)}
-            />
+            <FieldWithTooltip label="Stop Loss (%)" tooltip={getTooltip('step4.exitControls.stopLoss')}>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!!draft?.exits?.defaultSLPct}
+                  onChange={(e) => {
+                    const next = structuredClone(draft || {});
+                    if (e.target.checked) {
+                      next.atrStop = { ...next.atrStop, enabled: false };
+                      next.exits = { ...next.exits, defaultSLPct: 2 };
+                    } else {
+                      next.exits = { ...next.exits, defaultSLPct: undefined };
+                    }
+                    setDraft(next);
+                  }}
+                  className="rounded"
+                />
+                <input
+                  type="number"
+                  step="0.1"
+                  disabled={!draft?.exits?.defaultSLPct}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    !draft?.exits?.defaultSLPct 
+                      ? "border-gray-200 dark:border-neutral-700 bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
+                  }`}
+                  value={draft?.exits?.defaultSLPct ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const next = structuredClone(draft || {});
+                    next.exits = { ...next.exits, defaultSLPct: val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val)) };
+                    setDraft(next);
+                  }}
+                />
+              </div>
+            </FieldWithTooltip>
+            <FieldWithTooltip label="Breakeven Offset (%)" tooltip={getTooltip('step4.exitControls.breakevenOffset')}>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={draft?.breakeven?.enabled !== false}
+                  onChange={(e) => onToggle("breakeven.enabled", e.target.checked)}
+                  className="rounded"
+                />
+                <input
+                  type="number"
+                  step="0.1"
+                  disabled={draft?.breakeven?.enabled === false}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    draft?.breakeven?.enabled === false 
+                      ? "border-gray-200 dark:border-neutral-700 bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
+                  }`}
+                  value={draft?.breakeven?.offsetPct ?? ""}
+                  onChange={(e) => onNum("breakeven.offsetPct", e.target.value === "" ? undefined : parseFloat(e.target.value))}
+                />
+              </div>
+            </FieldWithTooltip>
+            <FieldWithTooltip label="Time Stop (bars)" tooltip={getTooltip('step4.exitControls.timeStop')}>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={draft?.timeStop?.enabled !== false}
+                  onChange={(e) => onToggle("timeStop.enabled", e.target.checked)}
+                  className="rounded"
+                />
+                <input
+                  type="number"
+                  step="1"
+                  disabled={draft?.timeStop?.enabled === false}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    draft?.timeStop?.enabled === false 
+                      ? "border-gray-200 dark:border-neutral-700 bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
+                  }`}
+                  value={draft?.timeStop?.bars ?? ""}
+                  onChange={(e) => onNum("timeStop.bars", e.target.value === "" ? undefined : parseFloat(e.target.value))}
+                />
+              </div>
+            </FieldWithTooltip>
           </div>
           <div className="grid grid-cols-3 gap-3">
             { tier === "advanced" ? (
-              <NumFieldWithToggle 
-                label="Trailing % (starts after TP2)" 
-                value={draft?.trailingTP?.valuePct} 
-                onChange={v=>{ const n = structuredClone(draft); n.trailingTP ??= { enabled: true, mode: "percent", activateAfter: "tp2" }; n.trailingTP.mode = "percent"; n.trailingTP.valuePct = isNum(v) ? Number(v) : undefined; setDraft(n); }} 
-                checked={(draft?.trailingTP?.enabled !== false) && draft?.trailingTP?.mode === "percent"}
-                onToggle={on=>onToggle("trailingTP.enabled", on, (n)=>{
-                  n.trailingTP ??= { enabled: on, mode: "percent", activateAfter: "tp2" };
-                  n.trailingTP.mode = "percent";
-                })}
-              />
+              <FieldWithTooltip label="Trailing % (starts after TP2)" tooltip={getTooltip('step4.exitControls.trailing')}>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={(draft?.trailingTP?.enabled !== false) && draft?.trailingTP?.mode === "percent"}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      const next = structuredClone(draft || {});
+                      next.trailingTP = { ...next.trailingTP, enabled: on, mode: "percent", activateAfter: "tp2" };
+                      setDraft(next);
+                    }}
+                    className="rounded"
+                  />
+                  <input
+                    type="number"
+                    step="0.1"
+                    disabled={!((draft?.trailingTP?.enabled !== false) && draft?.trailingTP?.mode === "percent")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      !((draft?.trailingTP?.enabled !== false) && draft?.trailingTP?.mode === "percent") 
+                        ? "border-gray-200 dark:border-neutral-700 bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                        : "border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
+                    }`}
+                    value={draft?.trailingTP?.valuePct ?? ""}
+                    onChange={(e) => {
+                      const n = structuredClone(draft); 
+                      n.trailingTP = n.trailingTP || { enabled: true, mode: "percent", activateAfter: "tp2" }; 
+                      n.trailingTP.mode = "percent"; 
+                      const val = e.target.value;
+                      n.trailingTP.valuePct = val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val)); 
+                      setDraft(n);
+                    }}
+                  />
+                </div>
+              </FieldWithTooltip>
             ) : tier === "expert" ? (
-              <NumFieldWithToggle 
-                label="Trailing ATR × (starts after TP2)" 
-                value={draft?.trailingTP?.atrMult} 
-                onChange={v=>{ const n = structuredClone(draft); n.trailingTP ??= { enabled: true, mode: "atr", activateAfter: "tp2" }; n.trailingTP.mode = "atr"; n.trailingTP.atrMult = isNum(v) ? Number(v) : undefined; setDraft(n); }} 
-                checked={(draft?.trailingTP?.enabled !== false) && draft?.trailingTP?.mode === "atr"}
-                onToggle={on=>onToggle("trailingTP.enabled", on, (n)=>{
-                  n.trailingTP ??= { enabled: on, mode: "atr", activateAfter: "tp2" };
-                  n.trailingTP.mode = "atr";
-                })}
-              />
+              <FieldWithTooltip label="Trailing ATR × (starts after TP2)" tooltip={getTooltip('step4.exitControls.trailing')}>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={(draft?.trailingTP?.enabled !== false) && draft?.trailingTP?.mode === "atr"}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      const next = structuredClone(draft || {});
+                      next.trailingTP = { ...next.trailingTP, enabled: on, mode: "atr", activateAfter: "tp2" };
+                      setDraft(next);
+                    }}
+                    className="rounded"
+                  />
+                  <input
+                    type="number"
+                    step="0.1"
+                    disabled={!((draft?.trailingTP?.enabled !== false) && draft?.trailingTP?.mode === "atr")}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      !((draft?.trailingTP?.enabled !== false) && draft?.trailingTP?.mode === "atr") 
+                        ? "border-gray-200 dark:border-neutral-700 bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                        : "border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
+                    }`}
+                    value={draft?.trailingTP?.atrMult ?? ""}
+                    onChange={(e) => {
+                      const n = structuredClone(draft); 
+                      n.trailingTP = n.trailingTP || { enabled: true, mode: "atr", activateAfter: "tp2" }; 
+                      n.trailingTP.mode = "atr"; 
+                      const val = e.target.value;
+                      n.trailingTP.atrMult = val === "" ? undefined : (isNaN(parseFloat(val)) ? undefined : parseFloat(val)); 
+                      setDraft(n);
+                    }}
+                  />
+                </div>
+              </FieldWithTooltip>
             ) : (
               <div></div>
             )}
-            <NumFieldWithToggle 
-              label="ATR Stop ×" 
-              value={draft?.atrStop?.atrMult} 
-              onChange={v=>onNum("atrStop.atrMult", v)} 
-              checked={!!draft?.atrStop?.enabled}
-              onToggle={(enabled)=>{
-                const next = structuredClone(draft || {});
-                if (enabled) {
-                  // Disable Stop Loss when enabling ATR Stop
-                  next.exits = { ...next.exits, defaultSLPct: undefined };
-                  next.atrStop = { ...next.atrStop, enabled: true, atrMult: 2 };
-                } else {
-                  next.atrStop = { ...next.atrStop, enabled: false };
-                }
-                setDraft(next);
-              }}
-            />
+            <FieldWithTooltip label="ATR Stop ×" tooltip={getTooltip('step4.exitControls.atrStop')}>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!!draft?.atrStop?.enabled}
+                  onChange={(e) => {
+                    const enabled = e.target.checked;
+                    const next = structuredClone(draft || {});
+                    if (enabled) {
+                      // Disable Stop Loss when enabling ATR Stop
+                      next.exits = { ...next.exits, defaultSLPct: undefined };
+                      next.atrStop = { ...next.atrStop, enabled: true, atrMult: 2 };
+                    } else {
+                      next.atrStop = { ...next.atrStop, enabled: false };
+                    }
+                    setDraft(next);
+                  }}
+                  className="rounded"
+                />
+                <input
+                  type="number"
+                  step="0.1"
+                  disabled={!draft?.atrStop?.enabled}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    !draft?.atrStop?.enabled 
+                      ? "border-gray-200 dark:border-neutral-700 bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
+                  }`}
+                  value={draft?.atrStop?.atrMult ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    onNum("atrStop.atrMult", val === "" ? undefined : parseFloat(val));
+                  }}
+                />
+              </div>
+            </FieldWithTooltip>
             <div></div>
           </div>
         </>

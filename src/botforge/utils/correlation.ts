@@ -7,3 +7,4 @@ export function allowedIndicatorsForStrategy(strategy: StrategyMeta, metas: Indi
 
 
 
+

@@ -2,8 +2,11 @@
 import { useMemo } from "react";
 import { useBuilderStore, type RuleGroupMode } from "@/botforge/state/builderStore";
 import { getRuleAlphaLabel } from "@/botforge/lib/ruleTitles";
+import { FieldWithTooltip } from "@/components/ui/FieldWithTooltip";
+import { useTooltips } from "@/hooks/useTooltips";
 
 export default function EntryLogicSelect() {
+  const { getTooltip } = useTooltips();
   const { 
     ruleGroupMode, 
     setRuleGroupMode, 
@@ -25,8 +28,10 @@ export default function EntryLogicSelect() {
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-3">
-        <label className="text-sm">
-          <div className="mb-1 text-muted-foreground">Entry Logic</div>
+        <FieldWithTooltip 
+          label="Entry Logic" 
+          tooltip={getTooltip('step4.entryLogic')}
+        >
           <select 
             className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
             value={ruleGroupMode} 
@@ -35,7 +40,7 @@ export default function EntryLogicSelect() {
               setRuleGroupMode(mode);
               // Also update the advanced.entry.logic for backward compatibility
               if (mode !== "SEQUENCE") {
-                setAdvanced({...advanced, entry: {...advanced.entry, logic: mode as "AND" | "OR"}});
+                setAdvanced({...advanced, entry: {...(advanced.entry || {}), logic: mode as "AND" | "OR"}});
               }
             }}
           >
@@ -43,21 +48,25 @@ export default function EntryLogicSelect() {
             <option value="OR">OR</option>
             <option value="SEQUENCE">SEQUENCE</option>
           </select>
-        </label>
-        <label className="text-sm">
-          <div className="mb-1 text-muted-foreground">Trade Direction</div>
+        </FieldWithTooltip>
+        <FieldWithTooltip 
+          label="Trade Direction" 
+          tooltip={getTooltip('step4.tradeDirection')}
+        >
           <select 
             className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={advanced.entry.tradeDirection}
-            onChange={(e) => setAdvanced({...advanced, entry: {...advanced.entry, tradeDirection: e.target.value as any}})}
+            value={advanced.entry?.tradeDirection || "Both"}
+            onChange={(e) => setAdvanced({...advanced, entry: {...(advanced.entry || {}), tradeDirection: e.target.value as any}})}
           >
             <option value="Both">Both</option>
             <option value="LongOnly">Long Only</option>
             <option value="ShortOnly">Short Only</option>
           </select>
-        </label>
-        <label className="text-sm">
-          <div className="mb-1 text-muted-foreground">Trading Timeframe</div>
+        </FieldWithTooltip>
+        <FieldWithTooltip
+          label="Trading Timeframe"
+          tooltip={getTooltip('step4.tradingTimeframe')}
+        >
           <select 
             className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={timeframe}
@@ -65,7 +74,7 @@ export default function EntryLogicSelect() {
           >
             {["1m","5m","15m","1h","4h","1d"].map(tf=><option key={tf}>{tf}</option>)}
           </select>
-        </label>
+        </FieldWithTooltip>
       </div>
 
       {ruleGroupMode === "SEQUENCE" && (
@@ -86,7 +95,7 @@ export default function EntryLogicSelect() {
               <option value="">— Rule A —</option>
               {sortedRules.map(rule => (
                 <option key={rule.id} value={rule.id}>
-                  {getRuleAlphaLabel(sortedRules, rule.id)}. {rule.left} {rule.operator} {rule.right}
+                  {getRuleAlphaLabel(sortedRules, rule.id)}. {String(rule.left?.id || rule.left)} {rule.operator} {String(rule.right?.param || rule.right)}
                 </option>
               ))}
             </select>
@@ -120,7 +129,7 @@ export default function EntryLogicSelect() {
               <option value="">— Rule B —</option>
               {sortedRules.map(rule => (
                 <option key={rule.id} value={rule.id}>
-                  {getRuleAlphaLabel(sortedRules, rule.id)}. {rule.left} {rule.operator} {rule.right}
+                  {getRuleAlphaLabel(sortedRules, rule.id)}. {String(rule.left?.id || rule.left)} {rule.operator} {String(rule.right?.param || rule.right)}
                 </option>
               ))}
             </select>

@@ -26,13 +26,11 @@ export function StrategyBuilderWizard({ userTier, credits }: StrategyBuilderWiza
     pairs, 
     strategyId, 
     indicatorSelections, 
-    riskSettings, 
     timeframe,
     setMarketType: setStoreMarketType,
     setPairs: setStorePairs,
     setStrategy: setStoreStrategy,
     setIndicators: setStoreIndicators,
-    setRisk: setStoreRisk,
     setTimeframe: setStoreTimeframe
   } = useBuilderStore();
 
@@ -42,11 +40,11 @@ export function StrategyBuilderWizard({ userTier, credits }: StrategyBuilderWiza
   const [filterIndicators, setFilterIndicators] = useState<IndicatorConfig[]>(indicatorSelections as IndicatorConfig[] || []);
   const [riskManagement, setRiskManagement] = useState<RiskManagement>({
     capitalAllocation: 100,
-    stopLoss: riskSettings.riskPerTradePct || 5.0,
+    stopLoss: 5.0,
     takeProfit: 10.0,
     trailingTakeProfit: 2.0,
-    leverageMultiplier: riskSettings.leverage || 1,
-    percentPerTrade: riskSettings.riskPerTradePct || 2.0
+    leverageMultiplier: 1,
+    percentPerTrade: 2.0
   });
   const [backtestParams, setBacktestParams] = useState<BacktestParams>({
     timeframe: timeframe || '1h',
@@ -56,13 +54,12 @@ export function StrategyBuilderWizard({ userTier, credits }: StrategyBuilderWiza
 
   const [steps, setSteps] = useState<WizardStep[]>([
     { step: 1, title: 'Market Type', description: 'Choose Spot or Perpetual Futures', isComplete: false, isActive: true },
-    { step: 2, title: 'Trading Pairs', description: 'Select cryptocurrency pairs', isComplete: false, isActive: false },
+    { step: 2, title: 'Training Pairs', description: 'Select cryptocurrency pairs', isComplete: false, isActive: false },
     { step: 3, title: 'Strategy', description: 'Choose trading strategy', isComplete: false, isActive: false },
     { step: 4, title: 'Advanced Settings', description: 'Configure parameters', isComplete: false, isActive: false },
-    { step: 5, title: 'Risk Management', description: 'Set risk parameters', isComplete: false, isActive: false },
-    { step: 6, title: 'Timeframe', description: 'Set timeframe and period', isComplete: false, isActive: false },
-    { step: 7, title: 'Backtest', description: 'Review and execute', isComplete: false, isActive: false },
-    { step: 8, title: 'Results', description: 'Save and export bot', isComplete: false, isActive: false }
+    { step: 5, title: 'Timeframe', description: 'Set timeframe and period', isComplete: false, isActive: false },
+    { step: 6, title: 'Backtest', description: 'Review and execute', isComplete: false, isActive: false },
+    { step: 7, title: 'Results', description: 'Save and export bot', isComplete: false, isActive: false }
   ]);
 
   // Update steps based on current state
@@ -74,10 +71,9 @@ export function StrategyBuilderWizard({ userTier, credits }: StrategyBuilderWiza
         step.step === 2 ? pairs.length > 0 :
         step.step === 3 ? !!strategyId :
         step.step === 4 ? indicatorSelections.length > 0 :
-        step.step === 5 ? !!riskSettings :
-        step.step === 6 ? !!timeframe :
+        step.step === 5 ? !!timeframe :
+        step.step === 6 ? false :
         step.step === 7 ? false :
-        step.step === 8 ? false :
         false
     })));
   };
@@ -85,7 +81,7 @@ export function StrategyBuilderWizard({ userTier, credits }: StrategyBuilderWiza
   // Update status on mount and when state changes
   useEffect(() => {
     updateStepsFromState();
-  }, [marketType, pairs, strategyId, indicatorSelections, riskSettings, timeframe]);
+  }, [marketType, pairs, strategyId, indicatorSelections, timeframe]);
 
   const updateSteps = (stepNumber: number, isComplete: boolean = false) => {
     setSteps(prev => prev.map(step => ({

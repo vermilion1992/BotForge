@@ -2,158 +2,318 @@
   "identity": {
     "id": "rsi",
     "label": "RSI (Relative Strength Index)",
-    "tier": "CORE"
-  },
-  "docs": {
     "category": "Momentum",
-    "tags": ["Momentum", "Oscillator", "Mean Reversion", "Filter"],
-    "blurb": "RSI measures recent price gains vs. losses on a bounded 0–100 scale. Useful for momentum confirmation, pullback entries, and mean reversion extremes.",
-    "longSummary": "The Relative Strength Index (RSI) compares the magnitude of recent gains to recent losses over a fixed lookback window, returning a value between 0 and 100. Readings above 70 are commonly considered overbought and readings below 30 oversold, though thresholds are context-dependent. RSI can be used for momentum continuation (e.g., holding above 50) or for mean-reversion entries when price snaps back from extremes. Combining RSI with trend filters (e.g., EMA/SMA) helps avoid counter-trend signals. Multi-timeframe confirmation can further reduce noise.",
-    "mathSummary": "RSI = 100 − 100 / (1 + RS), where RS = (Average Gain over N periods) / (Average Loss over N periods).",
-    "references": ["https://www.investopedia.com/terms/r/rsi.asp"]
+    "tier": "CORE",
+    "tags": ["Momentum", "Oscillator"],
+    "blurb": "A momentum oscillator that ranges between 0 and 100 to describe the balance of advances vs. declines.",
+    "longSummary": "RSI compares the magnitude of recent gains to recent losses over a lookback window, mapping the relationship onto a bounded 0–100 scale. Values above the midline suggest bullish pressure; below the midline suggest bearish pressure. Pushes toward overbought/oversold often precede mean reversion, while midline holds and reclaimed levels often align with trend continuation. RSI is commonly paired with a simple trend filter for clarity.",
+    "mathSummary": "RSI = 100 − (100 / (1 + RS)), where RS = AvgGain / AvgLoss over N periods.",
+    "references": [
+      {
+        "title": "Investopedia: Relative Strength Index (RSI)",
+        "url": "https://www.investopedia.com/terms/r/rsi.asp"
+      }
+    ]
   },
+  "docs": {},
   "params": {
-    "length": { "type": "number", "label": "Length", "default": 14, "min": 2, "max": 100, "step": 1, "unit": "bars" },
-    "source": { "type": "enum", "label": "Price Source", "enum": ["close","open","high","low","hl2","ohlc4"], "default": "close" },
-    "overbought": { "type": "number", "label": "Overbought", "default": 70, "min": 50, "max": 100, "step": 1 },
-    "oversold": { "type": "number", "label": "Oversold", "default": 30, "min": 0, "max": 50, "step": 1 },
-    "midline": { "type": "number", "label": "Midline", "default": 50, "min": 0, "max": 100, "step": 1 }
+    "length": {
+      "type": "number",
+      "label": "Length",
+      "default": 14,
+      "min": 2,
+      "max": 100,
+      "step": 1,
+      "unit": "bars"
+    },
+    "source": {
+      "type": "enum",
+      "label": "Price Source",
+      "enum": ["close", "open", "high", "low", "hl2", "ohlc4"],
+      "default": "close"
+    },
+    "overbought": {
+      "type": "number",
+      "label": "Overbought",
+      "default": 70,
+      "min": 50,
+      "max": 100,
+      "step": 1
+    },
+    "oversold": {
+      "type": "number",
+      "label": "Oversold",
+      "default": 30,
+      "min": 0,
+      "max": 50,
+      "step": 1
+    },
+    "midline": {
+      "type": "number",
+      "label": "Midline",
+      "default": 50,
+      "min": 0,
+      "max": 100,
+      "step": 1
+    }
   },
-  "outputs": ["value", "overboughtLine", "oversoldLine", "midline"],
-  "supportedOperators": [">", ">=", "<", "<=", "==", "crosses_above", "crosses_below", "rising", "falling", "within", "outside"],
+  "outputs": {
+    "shape": "scalar",
+    "subseries": []
+  },
+  "supportedOperators": [
+    ">",
+    ">=",
+    "<",
+    "<=",
+    "==",
+    "crosses_above",
+    "crosses_below",
+    "rising",
+    "falling",
+    "within",
+    "outside"
+  ],
   "signals": [
-    { "id": "rsi_cross_up_from_oversold", "label": "RSI crosses up from oversold", "direction": "bullish", "when": { "left": "value", "operator": "crosses_above", "right": "params.oversold" } },
-    { "id": "rsi_cross_down_from_overbought", "label": "RSI crosses down from overbought", "direction": "bearish", "when": { "left": "value", "operator": "crosses_below", "right": "params.overbought" } },
-    { "id": "rsi_above_midline", "label": "RSI above midline", "direction": "bullish", "when": { "left": "value", "operator": ">", "right": "params.midline" } },
-    { "id": "rsi_below_midline", "label": "RSI below midline", "direction": "bearish", "when": { "left": "value", "operator": "<", "right": "params.midline" } }
+    {
+      "id": "rsi_crosses_midline",
+      "label": "RSI crosses midline up",
+      "when": [
+        {
+          "left": { "type": "indicator", "id": "rsi", "output": "value" },
+          "op": "crosses_above",
+          "right": { "type": "indicator_param", "indicator": "rsi", "param": "midline" }
+        }
+      ]
+    },
+    {
+      "id": "rsi_exits_overbought",
+      "label": "RSI crosses below overbought",
+      "when": [
+        {
+          "left": { "type": "indicator", "id": "rsi", "output": "value" },
+          "op": "crosses_below",
+          "right": { "type": "indicator_param", "indicator": "rsi", "param": "overbought" }
+        }
+      ]
+    }
   ],
   "ui": {
     "tooltips": {
-      "_indicator": "RSI measures the ratio of average gains to average losses over a period (0–100). Use with thresholds or midline to frame momentum vs. mean reversion.",
-      "length": "Lookback window used to compute average gains/losses.",
-      "source": "Price input used to compute changes.",
-      "overbought": "Threshold above which the market is considered overbought.",
-      "oversold": "Threshold below which the market is considered oversold.",
-      "midline": "Momentum baseline (commonly 50). Above = bullish bias; below = bearish."
+      "_indicator": "RSI maps the balance of advances vs. declines onto a 0–100 scale. Midline acts as a momentum bias; pushes to extremes often revert.",
+      "length": "Lookback used for average gains/losses.",
+      "source": "Price field used to compute changes.",
+      "overbought": "Upper threshold often used to spot stretched momentum.",
+      "oversold": "Lower threshold often used to spot stretched downside.",
+      "midline": "Neutral baseline. Above = bullish bias; below = bearish."
     }
   },
-  "constraints": { "recommendedTimeframes": ["5m", "15m", "1h", "4h", "1d"] },
+  "constraints": {
+    "recommendedTimeframes": ["5m", "15m", "1h", "4h", "1D"]
+  },
   "examples": [
-    { "name": "RSI Conservative Mean Revert", "presetRef": "rsi_normal_conservative" },
-    { "name": "RSI Balanced Momentum", "presetRef": "rsi_normal_balanced" },
-    { "name": "RSI Aggressive Momentum", "presetRef": "rsi_normal_aggressive" },
-    { "name": "RSI Hero: Reversion + Guard", "presetRef": "rsi_hero_reversion_guarded" },
-    { "name": "RSI Hero: Momentum MTF", "presetRef": "rsi_hero_momentum_mtf" },
-    { "name": "RSI Hero: Regime Filter", "presetRef": "rsi_hero_filter_regime" }
+    { "name": "Momentum Bias", "presetRef": "rsi_momentum_bias" },
+    { "name": "Mean-Reversion Pop", "presetRef": "rsi_mean_reversion_pop" },
+    { "name": "Fade Exhaustion", "presetRef": "rsi_fade_exhaustion" },
+    { "name": "Trend Pullback Resume", "presetRef": "rsi_trend_pullback_resume" },
+    { "name": "Midline Lift", "presetRef": "rsi_midline_lift" },
+    { "name": "VWAP Momentum Filter", "presetRef": "rsi_vwap_momentum_filter" },
+    { "name": "Oversold Spring", "presetRef": "rsi_oversold_spring_seq" },
+    { "name": "Overbought Ease", "presetRef": "rsi_overbought_ease_seq" },
+    { "name": "Reclaim Sequence", "presetRef": "rsi_reclaim_three_step" }
   ],
   "riskTemplates": {
-    "atrStop": { "enabledDefault": false, "tooltip": "Places a protective stop using ATR multiple.", "atrPeriodDefault": 14, "atrMultDefault": 2.0 },
-    "trailingTP": { "enabledDefault": false, "tooltip": "Enables trailing profit steps after price moves in your favor.", "modeDefault": "percent", "stepPctDefault": 1.0, "takeProfitStepsDefault": [25, 50, 75] },
-    "breakeven": { "enabledDefault": false, "tooltip": "Moves stop to breakeven after a chosen risk multiple.", "triggerRRDefault": 1.0, "offsetPctDefault": 0.1 },
-    "timeStop": { "enabledDefault": false, "tooltip": "Closes trades after a fixed number of bars.", "barsDefault": 288 }
+    "atrStop": {
+      "enabledDefault": false,
+      "tooltip": "Optional ATR-based stop helper.",
+      "params": { "atrMult": 2, "lookback": 14 }
+    },
+    "trailingTP": {
+      "enabledDefault": false,
+      "tooltip": "Optional trailing exit helper.",
+      "params": { "trailType": "percent", "value": 1 }
+    },
+    "breakeven": {
+      "enabledDefault": false,
+      "tooltip": "Optional move-to-breakeven helper.",
+      "params": { "trigger": 1 }
+    },
+    "timeStop": {
+      "enabledDefault": false,
+      "tooltip": "Optional time-based exit helper.",
+      "params": { "bars": 20 }
+    }
   },
   "presets": [
     {
-      "id": "rsi_normal_conservative",
-      "label": "RSI Conservative Mean Revert",
-      "presetTier": "Normal",
-      "riskProfile": "Conservative",
-      "designIntent": "MeanReversion",
-      "extras": [],
-      "indicators": [
-        { "id": "rsi", "params": { "length": 14, "overbought": 68, "oversold": 32, "midline": 50 } },
-        { "id": "sma", "params": { "length": 200 } }
-      ],
-      "riskDefaults": {
-        "positionSizing": { "riskPerTradePct": 0.75, "leverage": 1 },
-        "exits": { "defaultSLPct": 3, "defaultTPPct": 6 }
-      }
-    },
-    {
-      "id": "rsi_normal_balanced",
-      "label": "RSI Balanced Momentum",
-      "presetTier": "Normal",
+      "id": "rsi_momentum_bias",
+      "name": "Momentum Bias",
+      "teaser": "Trade with the wind when momentum holds above neutral and builds.",
+      "summary": "Enter when RSI is above its midline and starting to rise. This signals positive momentum without extra filters.",
+      "whyUnique": "Clean, momentum-first bias without extra filters.",
+      "indicators": ["rsi"],
+      "designIntent": "Momentum",
       "riskProfile": "Balanced",
-      "designIntent": "Momentum",
       "extras": [],
-      "indicators": [
-        { "id": "rsi", "params": { "length": 14, "overbought": 70, "oversold": 30, "midline": 50 } },
-        { "id": "ema", "params": { "length": 50 } }
-      ],
-      "riskDefaults": {
-        "positionSizing": { "riskPerTradePct": 1.5, "leverage": 2 },
-        "exits": { "defaultSLPct": 5, "defaultTPPct": 10 }
-      }
+      "rules": [
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": ">", "right": { "type": "indicator_param", "indicator": "rsi", "param": "midline" } },
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "rising" }
+      ]
     },
     {
-      "id": "rsi_normal_aggressive",
-      "label": "RSI Aggressive Momentum",
-      "presetTier": "Normal",
-      "riskProfile": "Aggressive",
-      "designIntent": "Momentum",
-      "extras": [],
-      "indicators": [
-        { "id": "rsi", "params": { "length": 12, "overbought": 72, "oversold": 28, "midline": 50 } },
-        { "id": "ema", "params": { "length": 21 } }
-      ],
-      "riskDefaults": {
-        "positionSizing": { "riskPerTradePct": 3, "leverage": 3 },
-        "exits": { "defaultSLPct": 7, "defaultTPPct": 14 }
-      }
-    },
-    {
-      "id": "rsi_hero_reversion_guarded",
-      "label": "RSI Hero — Reversion + Guard",
-      "presetTier": "Hero",
-      "riskProfile": "Balanced",
+      "id": "rsi_mean_reversion_pop",
+      "name": "Mean-Reversion Pop",
+      "teaser": "Catch the first lift after pressure eases from the lower zone.",
+      "summary": "Enter when RSI crosses up out of the oversold zone. This looks for a first bounce after a stretched move down.",
+      "whyUnique": "Pure reversion trigger that avoids mid-trend noise.",
+      "indicators": ["rsi"],
       "designIntent": "MeanReversion",
-      "extras": ["riskGuard", "signalCooldown"],
-      "cooldownBars": 5,
-      "indicators": [
-        { "id": "rsi", "params": { "length": 14, "overbought": 67, "oversold": 33, "midline": 50 } },
-        { "id": "atr", "params": { "length": 14 } },
-        { "id": "sma", "params": { "length": 200 } }
-      ],
-      "riskDefaults": {
-        "positionSizing": { "riskPerTradePct": 1.25, "leverage": 2 },
-        "exits": { "defaultSLPct": 4, "defaultTPPct": 8 }
-      }
+      "riskProfile": "Balanced",
+      "extras": [],
+      "rules": [
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "crosses_above", "right": { "type": "indicator_param", "indicator": "rsi", "param": "oversold" } }
+      ]
     },
     {
-      "id": "rsi_hero_momentum_mtf",
-      "label": "RSI Hero — Momentum MTF",
-      "presetTier": "Hero",
-      "riskProfile": "Aggressive",
-      "designIntent": "Momentum",
-      "extras": ["multiTFConfirm", "confirmationIndicator"],
-      "cooldownBars": 0,
-      "indicators": [
-        { "id": "rsi", "params": { "length": 12, "overbought": 70, "oversold": 30, "midline": 50 } },
-        { "id": "ema", "params": { "length": 50 } }
-      ],
-      "mtf": { "confirmTF": "4h", "rule": "RSI.value > 50 AND EMA(50) rising" },
-      "riskDefaults": {
-        "positionSizing": { "riskPerTradePct": 3.0, "leverage": 3 },
-        "exits": { "defaultSLPct": 6, "defaultTPPct": 12 }
-      }
-    },
-    {
-      "id": "rsi_hero_filter_regime",
-      "label": "RSI Hero — Regime Filter",
-      "presetTier": "Hero",
+      "id": "rsi_fade_exhaustion",
+      "name": "Fade Exhaustion",
+      "teaser": "Step aside from stretch; look for momentum to cool from the top band.",
+      "summary": "Enter when RSI falls back below the overbought line. This looks for strength to ease after a stretch.",
+      "whyUnique": "Counter-move entry only once strength begins to ease.",
+      "indicators": ["rsi"],
+      "designIntent": "MeanReversion",
       "riskProfile": "Conservative",
-      "designIntent": "Filter",
-      "extras": ["regimeFilter", "confirmationIndicator"],
-      "cooldownBars": 2,
-      "indicators": [
-        { "id": "rsi", "params": { "length": 14, "overbought": 70, "oversold": 30, "midline": 50 } },
-        { "id": "sma", "params": { "length": 200 } }
-      ],
-      "regime": { "bias": "long_only", "rule": "Price > SMA200 AND RSI.value > 50" },
-      "riskDefaults": {
-        "positionSizing": { "riskPerTradePct": 0.9, "leverage": 1 },
-        "exits": { "defaultSLPct": 3.5, "defaultTPPct": 7 }
-      }
+      "extras": [],
+      "rules": [
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "crosses_below", "right": { "type": "indicator_param", "indicator": "rsi", "param": "overbought" } }
+      ]
+    },
+    {
+      "id": "rsi_trend_pullback_resume",
+      "name": "Trend Pullback Resume",
+      "teaser": "Align with an up-bias and let momentum re-engage.",
+      "summary": "Enter when price is above a simple moving average and RSI sits back above its midline and is rising. This combines trend bias with momentum confirmation.",
+      "whyUnique": "Adds a light trend gate for clarity in choppy tape.",
+      "indicators": ["rsi", "sma"],
+      "designIntent": "Momentum",
+      "riskProfile": "Balanced",
+      "extras": [],
+      "rules": [
+        { "left": { "type": "price", "field": "close" }, "op": ">", "right": { "type": "indicator", "id": "sma", "output": "value" } },
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": ">", "right": { "type": "indicator_param", "indicator": "rsi", "param": "midline" } },
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "rising" }
+      ]
+    },
+    {
+      "id": "rsi_midline_lift",
+      "name": "Midline Lift",
+      "teaser": "Simple reclaim of neutral into a fresh push.",
+      "summary": "Enter when RSI crosses up through the midline. A straightforward momentum turn without other conditions.",
+      "whyUnique": "Minimalist reclaim trigger with no additional filters.",
+      "indicators": ["rsi"],
+      "designIntent": "Breakout",
+      "riskProfile": "Balanced",
+      "extras": [],
+      "rules": [
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "crosses_above", "right": { "type": "indicator_param", "indicator": "rsi", "param": "midline" } }
+      ]
+    },
+    {
+      "id": "rsi_vwap_momentum_filter",
+      "name": "VWAP Momentum Filter",
+      "teaser": "Only engage when price leans with session bias and momentum aligns.",
+      "summary": "Enter when price is above VWAP and RSI is above the midline and rising. This prefers momentum that agrees with session bias.",
+      "whyUnique": "Combines session context with oscillator bias for clearer signals.",
+      "indicators": ["rsi", "vwap"],
+      "designIntent": "Momentum",
+      "riskProfile": "Balanced",
+      "extras": [],
+      "rules": [
+        { "left": { "type": "price", "field": "close" }, "op": ">", "right": { "type": "indicator", "id": "vwap", "output": "value" } },
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": ">", "right": { "type": "indicator_param", "indicator": "rsi", "param": "midline" } },
+        { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "rising" }
+      ]
+    },
+    {
+      "id": "rsi_oversold_spring_seq",
+      "name": "Oversold Spring",
+      "teaser": "Pressure releases from the lower band, then momentum confirms.",
+      "summary": "Two steps: first RSI dips below the oversold line, then it crosses back above that line. Entry triggers on the reclaim.",
+      "whyUnique": "Two-stage confirmation helps filter weak bounces.",
+      "indicators": ["rsi"],
+      "designIntent": "Momentum",
+      "riskProfile": "Balanced",
+      "extras": [],
+      "sequence": [
+        {
+          "name": "Sink",
+          "rules": [
+            { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "<", "right": { "type": "indicator_param", "indicator": "rsi", "param": "oversold" } }
+          ]
+        },
+        {
+          "name": "Pop",
+          "rules": [
+            { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "crosses_above", "right": { "type": "indicator_param", "indicator": "rsi", "param": "oversold" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rsi_overbought_ease_seq",
+      "name": "Overbought Ease",
+      "teaser": "Stretch first, then loss of grip from the upper band.",
+      "summary": "Two steps: first RSI moves into the overbought zone, then it crosses back below that line. Entry triggers on the slip under.",
+      "whyUnique": "Two-part structure reduces premature fades.",
+      "indicators": ["rsi"],
+      "designIntent": "MeanReversion",
+      "riskProfile": "Conservative",
+      "extras": [],
+      "sequence": [
+        {
+          "name": "Stretch",
+          "rules": [
+            { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": ">", "right": { "type": "indicator_param", "indicator": "rsi", "param": "overbought" } }
+          ]
+        },
+        {
+          "name": "Ease",
+          "rules": [
+            { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "crosses_below", "right": { "type": "indicator_param", "indicator": "rsi", "param": "overbought" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rsi_reclaim_three_step",
+      "name": "Reclaim Sequence",
+      "teaser": "Hold, shake, reclaim — a structured bias reset.",
+      "summary": "Three steps: RSI holds above the midline, briefly slips below it, then crosses back above. Entry triggers on the final reclaim.",
+      "whyUnique": "Three-event pattern that captures a classic reclaim setup.",
+      "indicators": ["rsi"],
+      "designIntent": "Momentum",
+      "riskProfile": "Aggressive",
+      "extras": [],
+      "sequence": [
+        {
+          "name": "Hold",
+          "rules": [
+            { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": ">", "right": { "type": "indicator_param", "indicator": "rsi", "param": "midline" } }
+          ]
+        },
+        {
+          "name": "Shake",
+          "rules": [
+            { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "crosses_below", "right": { "type": "indicator_param", "indicator": "rsi", "param": "midline" } }
+          ]
+        },
+        {
+          "name": "Reclaim",
+          "rules": [
+            { "left": { "type": "indicator", "id": "rsi", "output": "value" }, "op": "crosses_above", "right": { "type": "indicator_param", "indicator": "rsi", "param": "midline" } }
+          ]
+        }
+      ]
     }
   ],
   "deprecated": false

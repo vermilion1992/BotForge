@@ -30,7 +30,7 @@ export function StepPairTemplate({ selected, onSelect, onNext, onPrevious, userT
     {
       id: 'custom',
       name: 'Custom Selection',
-      description: 'Choose your own trading pairs',
+      description: 'Choose your own training pairs',
       pairs: [],
       tier: 'expert' as UserTier
     }
@@ -45,9 +45,9 @@ export function StepPairTemplate({ selected, onSelect, onNext, onPrevious, userT
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-3xl font-bold mb-2">Select Trading Pairs</h2>
+        <h2 className="text-3xl font-bold mb-2">Select Training Pairs</h2>
         <p className="text-muted-foreground">
-          Choose the cryptocurrency pairs for your trading strategy
+          Choose the cryptocurrency pairs for your training strategy
         </p>
       </div>
 

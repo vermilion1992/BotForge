@@ -53,7 +53,7 @@ export default function Step7Backtest() {
         <CardTitle>Configuration Summary</CardTitle>
         <Small>Your strategy is ready for backtesting. Configure the timeframe and date range below, then run the backtest.</Small>
         <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-          <p>• Market type and trading pairs selected</p>
+          <p>• Market type and training pairs selected</p>
           <p>• Strategy and indicators configured</p>
           <p>• Advanced settings applied</p>
           <p>• Risk management parameters set</p>
@@ -115,8 +115,8 @@ export default function Step7Backtest() {
 
       {/* footer actions */}
       <div className="mt-4 flex items-center justify-between">
-        <button onClick={()=>router.push("/strategy-builder/step5")} className="rounded-xl border border-gray-300 dark:border-neutral-600 px-6 py-3 shadow-sm hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors font-medium">
-          Back to Risk Management
+        <button onClick={()=>router.push("/strategy-builder/step4")} className="rounded-xl border border-gray-300 dark:border-neutral-600 px-6 py-3 shadow-sm hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors font-medium">
+          Back to Advanced Settings
         </button>
         <button
           onClick={run}

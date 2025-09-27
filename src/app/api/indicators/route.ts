@@ -1,25 +1,42 @@
-import { NextResponse } from "next/server";
-import { readdir, readFile } from "fs/promises";
-import path from "path";
-import { normalizeMeta } from "@/app/strategy-builder/lib/normalizeMeta";
+import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const base = path.join(process.cwd(), "src", "indicators");
-    const dirs = await readdir(base, { withFileTypes: true });
-    const metas: any[] = [];
-    for (const d of dirs) {
-      if (!d.isDirectory()) continue;
-      try {
-        const raw = await readFile(path.join(base, d.name, "meta.json"), "utf8");
-        metas.push(normalizeMeta(JSON.parse(raw)));
-      } catch {}
+    // Path to indicators directory
+    const indicatorsPath = path.join(process.cwd(), 'src', 'indicators');
+    
+    // Check if indicators directory exists
+    if (!fs.existsSync(indicatorsPath)) {
+      return NextResponse.json([]);
     }
-    // filter to ATR/RSI/EMA only (current minimal set)
-    const allowed = new Set(["atr","rsi","ema"]);
-    const trimmed = metas.filter(m => allowed.has(m.id.toLowerCase()));
-    return NextResponse.json({ metas: trimmed });
-  } catch (e:any) {
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+
+    // Read all indicator directories
+    const indicatorDirs = fs.readdirSync(indicatorsPath, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
+
+    const indicators: any[] = [];
+
+    // Load meta.json from each indicator directory
+    for (const dir of indicatorDirs) {
+      const metaPath = path.join(indicatorsPath, dir, 'meta.json');
+      
+      if (fs.existsSync(metaPath)) {
+        try {
+          const metaContent = fs.readFileSync(metaPath, 'utf8');
+          const meta = JSON.parse(metaContent);
+          indicators.push(meta);
+        } catch (error) {
+          console.error(`Error loading meta.json for ${dir}:`, error);
+        }
+      }
+    }
+
+    return NextResponse.json(indicators);
+  } catch (error) {
+    console.error('Error in /api/indicators:', error);
+    return NextResponse.json({ error: 'Failed to load indicators' }, { status: 500 });
   }
 }

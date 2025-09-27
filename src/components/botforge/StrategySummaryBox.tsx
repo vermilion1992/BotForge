@@ -42,8 +42,8 @@ export default function StrategySummaryBox() {
   }
 
   return (
-    <div className="rounded-lg border p-3">
-      <p className="text-base md:text-lg leading-6 whitespace-pre-line">{text}</p>
+    <div className="rounded-lg border-2 border-blue-200 dark:border-blue-800 p-3">
+      <p className="text-sm leading-5 whitespace-pre-line text-gray-600 dark:text-gray-300">{text}</p>
     </div>
   );
 }

@@ -16,9 +16,26 @@ export const configSchema = z.object({
   }).default({}),
   indicators: z.array(indicatorSelSchema).default([]),
   risk: z.object({
-    riskPerTradePct: z.number().min(0).max(100).default(1.75),
-    leverage: z.number().min(1).max(125).default(2)
-  }).default({ riskPerTradePct: 1.75, leverage: 2 })
+    startingCapital: z.number().min(100).default(10000),
+    riskPerTradePct: z.number().min(0.1).max(10).default(1),
+    maxConcurrentTrades: z.number().min(1).default(3),
+    maxLeverage: z.number().min(1).max(125).default(5),
+    notionalCapPerTrade: z.number().nullable().default(null),
+    dailyDrawdownStopPct: z.number().nullable().default(null),
+    useCurrentEquityForSizing: z.boolean().default(true),
+    perAssetExposureCapPct: z.number().nullable().default(null),
+    lossStreakLockoutN: z.number().nullable().default(null)
+  }).default({
+    startingCapital: 10000,
+    riskPerTradePct: 1,
+    maxConcurrentTrades: 3,
+    maxLeverage: 5,
+    notionalCapPerTrade: null,
+    dailyDrawdownStopPct: null,
+    useCurrentEquityForSizing: true,
+    perAssetExposureCapPct: null,
+    lossStreakLockoutN: null
+  })
 });
 
 export type ImportConfig = z.infer<typeof configSchema>;
@@ -31,6 +48,7 @@ export async function resolveStrategyId(input: { id?: string; label?: string }):
   const match = res?.strategies?.find((s:any)=> String(s.label).toLowerCase() === String(input.label).toLowerCase());
   return match?.id;
 }
+
 
 
 

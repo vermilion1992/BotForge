@@ -1,7 +1,7 @@
 {
   "steps": [
     {"id":"market","title":"Market Type"},
-    {"id":"pairs","title":"Trading Pairs"},
+    {"id":"pairs","title":"Training Pairs"},
     {"id":"strategy_indicators","title":"Strategy & Indicators"},
     {"id":"advanced","title":"Advanced Settings"},
     {"id":"risk","title":"Risk Management"},

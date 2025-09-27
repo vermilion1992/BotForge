@@ -3,8 +3,10 @@ import { cn } from "./cn";
 export function Tile({ active, onClick, title, desc, icon }: { active?:boolean; onClick?:()=>void; title:string; desc?:string; icon?:React.ReactNode }) {
   return (
     <button onClick={onClick} className={cn(
-      "w-full rounded-2xl border p-4 text-left shadow-sm transition hover:shadow bg-white/80 dark:bg-neutral-900/60 hover:bg-white dark:hover:bg-neutral-900",
-      active ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20" : ""
+      "w-full rounded-2xl p-4 text-left shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-neutral-600",
+      active 
+        ? "border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20" 
+        : "border bg-white dark:bg-neutral-900/60"
     )}>
       <div className="flex items-center gap-3">
         {icon ? <div className="grid h-10 w-10 place-items-center rounded-xl border">{icon}</div> : null}

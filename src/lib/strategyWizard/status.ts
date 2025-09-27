@@ -3,9 +3,8 @@ export interface WizardStatus {
   step2_pairs: boolean;
   step3_strategy: boolean;
   step4_advanced: boolean;
-  step5_risk: boolean;
-  step6_backtest: boolean;
-  step7_results: boolean;
+  step5_backtest: boolean;
+  step6_results: boolean;
 }
 
 export function getWizardStatus(): WizardStatus {
@@ -15,9 +14,8 @@ export function getWizardStatus(): WizardStatus {
     step2_pairs: false,
     step3_strategy: false,
     step4_advanced: false,
-    step5_risk: false,
-    step6_backtest: false,
-    step7_results: false,
+    step5_backtest: false,
+    step6_results: false,
   };
   }
 
@@ -26,9 +24,8 @@ export function getWizardStatus(): WizardStatus {
     step2_pairs: localStorage.getItem("bf_pairs") !== null,
     step3_strategy: localStorage.getItem("bf_strategy") !== null,
     step4_advanced: localStorage.getItem("bf_indicators") !== null,
-    step5_risk: localStorage.getItem("bf_risk") !== null,
-    step6_backtest: localStorage.getItem("bf_backtest") !== null,
-    step7_results: localStorage.getItem("bf_results") !== null,
+    step5_backtest: localStorage.getItem("bf_backtest") !== null,
+    step6_results: localStorage.getItem("bf_results") !== null,
   };
 }
 

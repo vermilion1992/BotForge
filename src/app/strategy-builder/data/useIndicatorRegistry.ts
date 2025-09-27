@@ -13,8 +13,19 @@ export function useIndicatorRegistry() {
       try {
         const r = await fetch("/api/indicators", { cache: "no-store" });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const j = await r.json();
-        if (alive) setMetas(j.metas ?? []);
+        const data = await r.json();
+        const list: any[] = Array.isArray(data?.metas) ? data.metas : [];
+        const adapted = list.map((m:any) => {
+          const id = String(m?.id ?? m?.identity?.id ?? "").trim();
+          const label = String(m?.label ?? m?.identity?.label ?? id).trim();
+          return {
+            ...m,
+            id,
+            label,
+            identity: { ...(m.identity||{}), id, label }
+          };
+        }).filter((m:any)=>m.id);
+        if (alive) setMetas(adapted as any);
       } catch (e:any) {
         if (alive) setError(String(e));
       } finally {

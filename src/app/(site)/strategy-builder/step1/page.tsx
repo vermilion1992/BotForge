@@ -52,15 +52,16 @@ function Chip({ symbol, selected, onToggle, tabIndex }:{ symbol:string; selected
 
 export default function Step1Market() {
   const { marketType, setMarketType, pairs, setPairs, setPairsPreset } = useBuilderStore();
-  const [selection, setSelection] = useState<string[]>(pairs);
+  const [selection, setSelection] = useState<string[]>(pairs || []);
   const [search, setSearch] = useState("");
   const [universe, setUniverse] = useState<"All"|"Top 10"|"Top 30"|"Top 50">("Top 30");
   const [memeOnly, setMemeOnly] = useState(false);
   const [view, setView] = useState<"all"|"remaining"|"selected">("all");
+  const [expandedMarketType, setExpandedMarketType] = useState<"spot" | "perp" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  useEffect(()=>{ setSelection(pairs); },[]);
+  useEffect(()=>{ setSelection(pairs || []); },[]);
 
   /** base universe by selector */
   const baseUniverse = useMemo(()=>{
@@ -122,43 +123,75 @@ export default function Step1Market() {
   }
 
   const tooMany = selection.length > 30;
+  
   return (
     <StrategyBuilderShell>
-      <PageHeader title="Market Type & Trading Pairs" subtitle="Choose your market type and select trading pairs for this bot." />
+      <PageHeader title="Market & Training Pairs" subtitle="Choose your market type and select training pairs for this bot." />
       <Stepper current="market" />
       
-      {/* Market Type Selection */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold mb-4">Market Type</h3>
-        <div className="grid gap-6 md:grid-cols-2">
-          <Tile active={marketType==="spot"} onClick={()=>setMarketType("spot")} title="Spot" desc="Trade on spot markets" icon={<Coins size={20}/>}/>
-          <Tile active={marketType==="perp"} onClick={()=>setMarketType("perp")} title="Perpetual Futures" desc="Trade perpetual swaps" icon={<Repeat size={20}/>}/>
-        </div>
-      </div>
+        {/* Market & Training Pairs Section */}
+        <div className="mb-8">
+          <div className="rounded-2xl border p-6 shadow-sm bg-white dark:bg-neutral-800">
+            {/* Header inside the tile */}
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            Market & Training Pairs
+          </h3>
+          
+          {/* Market Type Selection */}
+          <div className="mb-6">
+            {expandedMarketType ? (
+              <ExpandedMarketTypeView
+                marketType={expandedMarketType}
+                isSelected={marketType === expandedMarketType}
+                onBack={() => setExpandedMarketType(null)}
+                onToggle={() => setMarketType(marketType === expandedMarketType ? null : expandedMarketType)}
+              />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 mb-6">
+                <MarketTypeTile
+                  type="spot"
+                  title="Spot"
+                  desc="Trade on spot markets"
+                  icon={<Coins size={20}/>}
+                  isSelected={marketType === "spot"}
+                  onToggle={() => setMarketType(marketType === "spot" ? null : "spot")}
+                  onLearnMore={() => setExpandedMarketType("spot")}
+                />
+                <MarketTypeTile
+                  type="perp"
+                  title="Perpetual Futures"
+                  desc="Trade perpetual swaps"
+                  icon={<Repeat size={20}/>}
+                  isSelected={marketType === "perp"}
+                  onToggle={() => setMarketType(marketType === "perp" ? null : "perp")}
+                  onLearnMore={() => setExpandedMarketType("perp")}
+                />
+              </div>
+            )}
+          </div>
 
-      {/* Trading Pairs Selection */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold mb-4">Trading Pairs</h3>
-        <div className="rounded-2xl border p-4 shadow-sm bg-white dark:bg-neutral-800">
+          {/* Training Pairs Selection Area */}
+          <div className="border-t pt-6">
           {/* sticky mini header */}
           <div className="sticky top-0 z-10 mb-3 -mt-4 rounded-t-2xl border-b bg-white/80 px-4 py-2 text-sm backdrop-blur dark:bg-neutral-900/80">
             <div className="flex items-center justify-between">
-              <div className="text-black dark:text-white">Selected: <b>{selection.length}</b> / 30 {tooMany && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">Large selection may slow backtests</span>}</div>
+              <div className="text-gray-900 dark:text-white">Selected: <b>{selection.length}</b> / 30 {tooMany && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">Large selection may slow backtests</span>}</div>
               <div className="flex items-center gap-2">
                 <button className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                   view === "all" 
                     ? "bg-blue-600 text-white border-blue-600" 
-                    : "bg-white dark:bg-neutral-700 text-black dark:text-white border-gray-200 dark:border-neutral-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    : "bg-white dark:bg-neutral-700 text-gray-900 dark:text-white border-gray-200 dark:border-neutral-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 }`} onClick={()=>setView("all")}>Show All</button>
                 <button className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                   view === "remaining" 
                     ? "bg-blue-600 text-white border-blue-600" 
-                    : "bg-white dark:bg-neutral-700 text-black dark:text-white border-gray-200 dark:border-neutral-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    : "bg-white dark:bg-neutral-700 text-gray-900 dark:text-white border-gray-200 dark:border-neutral-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 }`} onClick={()=>setView(view === "remaining" ? "all" : "remaining")}>Remaining</button>
                 <button className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                   view === "selected" 
                     ? "bg-blue-600 text-white border-blue-600" 
-                    : "bg-white dark:bg-neutral-700 text-black dark:text-white border-gray-200 dark:border-neutral-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    : "bg-white dark:bg-neutral-700 text-gray-900 dark:text-white border-gray-200 dark:border-neutral-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 }`} onClick={()=>setView(view === "selected" ? "all" : "selected")}>Selected</button>
               </div>
             </div>
@@ -208,6 +241,7 @@ export default function Step1Market() {
               Tip: You've selected more than 30 pairs. Consider narrowing the set for faster backtests.
             </div>
           )}
+          </div>
         </div>
       </div>
 
@@ -231,5 +265,212 @@ export default function Step1Market() {
         </button>
       </div>
     </StrategyBuilderShell>
+  );
+}
+
+// Market Type Tile Component with Learn More
+function MarketTypeTile({ type, title, desc, icon, isSelected, onToggle, onLearnMore }: {
+  type: string;
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+  isSelected: boolean;
+  onToggle: () => void;
+  onLearnMore: () => void;
+}) {
+  return (
+    <div className={`rounded-2xl shadow-sm transition-all duration-200 cursor-pointer ${
+      isSelected 
+        ? "border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20" 
+        : "border bg-white dark:bg-neutral-900/60 hover:shadow-md hover:border-gray-300 dark:hover:border-neutral-600"
+    }`}>
+      <div className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          {/* Main tile content - clickable for selection */}
+          <button onClick={onToggle} className="flex items-center gap-3 flex-1 text-left">
+            <div className="grid h-10 w-10 place-items-center rounded-xl border">
+              {icon}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900 dark:text-white">{title}</div>
+              <div className="text-gray-600 dark:text-gray-400 text-xs mt-1">{desc}</div>
+              {isSelected && (
+                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 text-xs font-medium mt-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  Selected
+                </div>
+              )}
+            </div>
+          </button>
+          
+          {/* Learn More button */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onLearnMore();
+            }}
+            className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-full hover:bg-blue-700 transition-colors whitespace-nowrap"
+          >
+            Learn More
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Expanded Market Type View Component
+function ExpandedMarketTypeView({ marketType, isSelected, onBack, onToggle }: {
+  marketType: "spot" | "perp";
+  isSelected: boolean;
+  onBack: () => void;
+  onToggle: () => void;
+}) {
+  const getMarketTypeInfo = (type: "spot" | "perp") => {
+    if (type === "spot") {
+      return {
+        title: "Spot Trading",
+        icon: <Coins className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
+        description: "Spot trading involves buying and selling cryptocurrencies for immediate delivery. When you trade on spot markets, you own the actual digital assets and can hold them in your wallet or exchange account.",
+        features: [
+          "Immediate ownership of assets",
+          "No expiration dates or rollover fees",
+          "Perfect for long-term holding strategies",
+          "Lower complexity and risk",
+          "Direct price exposure to the underlying asset"
+        ],
+        benefits: [
+          "Simple and straightforward trading",
+          "No leverage risks or liquidation",
+          "Suitable for beginners and conservative traders",
+          "Can withdraw and store assets securely"
+        ],
+        considerations: [
+          "Requires full capital upfront",
+          "No leverage amplification",
+          "Limited hedging options"
+        ]
+      };
+    } else {
+      return {
+        title: "Perpetual Futures Trading",
+        icon: <Repeat className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
+        description: "Perpetual futures are derivative contracts that allow you to trade cryptocurrency price movements without owning the underlying asset. These contracts never expire and use a funding mechanism to keep prices aligned with the spot market.",
+        features: [
+          "Leverage up to 100x on most platforms",
+          "No expiration date (perpetual contracts)",
+          "Funding rate mechanism keeps price aligned",
+          "Ability to go long or short",
+          "Higher capital efficiency"
+        ],
+        benefits: [
+          "Amplified profit potential with leverage",
+          "Can profit from both rising and falling markets",
+          "No need to own the underlying cryptocurrency",
+          "24/7 trading with high liquidity"
+        ],
+        considerations: [
+          "Higher risk due to leverage amplification",
+          "Possibility of liquidation if margin insufficient",
+          "Funding rates can impact profitability",
+          "More complex than spot trading"
+        ]
+      };
+    }
+  };
+
+  const info = getMarketTypeInfo(marketType);
+
+  return (
+    <div className="rounded-2xl border bg-white dark:bg-neutral-900/60 shadow-sm">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+              {info.icon}
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{info.title}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Market Type</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="mb-4">
+          <p className="text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+            {info.description}
+          </p>
+        </div>
+
+        {/* Combined Features, Benefits & Considerations */}
+        <div className="grid md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Key Features</h5>
+            <ul className="space-y-1">
+              {info.features.slice(0, 3).map((feature, idx) => (
+                <li key={idx} className="text-sm text-gray-600 dark:text-gray-300 flex items-start gap-1.5">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div>
+            <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Benefits</h5>
+            <ul className="space-y-1">
+              {info.benefits.slice(0, 3).map((benefit, idx) => (
+                <li key={idx} className="text-sm text-gray-600 dark:text-gray-300 flex items-start gap-1.5">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Considerations</h5>
+            <ul className="space-y-1">
+              {info.considerations.slice(0, 3).map((consideration, idx) => (
+                <li key={idx} className="text-sm text-gray-600 dark:text-gray-300 flex items-start gap-1.5">
+                  <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                  {consideration}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-neutral-700">
+          <button 
+            onClick={onBack}
+            className="px-4 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
+          >
+            Back
+          </button>
+          
+          <div className="flex items-center gap-2">
+            {isSelected && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium rounded">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                Selected
+              </div>
+            )}
+            <button 
+              onClick={onToggle}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isSelected
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              {isSelected ? 'Deselect' : 'Select'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

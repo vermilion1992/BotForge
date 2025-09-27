@@ -7,7 +7,10 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "botforge:validate": "tsx src/botforge/utils/validateSoT.ts"
+    "botforge:validate": "tsx src/botforge/utils/validateSoT.ts",
+    "clean:indicators:dry": "node scripts/indicators-clean.mjs --dry-run",
+    "clean:indicators": "node scripts/indicators-clean.mjs --mode=archive",
+    "clean:indicators:delete": "node scripts/indicators-clean.mjs --mode=delete"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.705.0",

@@ -78,3 +78,4 @@ function isRising(symbol: string, tf: "1h"|"4h"|"1D", ma: "ema"|"sma", length: n
 }
 
 
+
