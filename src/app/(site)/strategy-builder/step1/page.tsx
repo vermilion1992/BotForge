@@ -51,7 +51,7 @@ function Chip({ symbol, selected, onToggle, tabIndex }:{ symbol:string; selected
 }
 
 export default function Step1Market() {
-  const { marketType, setMarketType, pairs, setPairs, setPairsPreset } = useBuilderStore();
+  const { marketType, setMarketType, pairs = [], setPairs, setPairsPreset } = useBuilderStore();
   const [selection, setSelection] = useState<string[]>(pairs || []);
   const [search, setSearch] = useState("");
   const [universe, setUniverse] = useState<"All"|"Top 10"|"Top 30"|"Top 50">("Top 30");

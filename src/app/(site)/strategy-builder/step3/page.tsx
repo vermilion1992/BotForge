@@ -56,7 +56,7 @@ function getRiskIcon(riskProfile: string) {
 
 export default function Step3Strategy() {
   const router = useRouter();
-  const { indicatorSelections, setIndicators, setSelectedPreset, setDirection, setInverseSignals, applyPresetById } = useBuilderStore();
+  const { indicatorSelections = [], setIndicators, setSelectedPreset, setDirection, setInverseSignals, applyPresetById } = useBuilderStore();
   const [metas, setMetas] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"indicators" | "strategies">("indicators");

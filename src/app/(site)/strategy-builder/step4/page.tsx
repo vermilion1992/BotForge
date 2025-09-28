@@ -139,9 +139,9 @@ function formatRuleForDisplay(rule: any, getParamValue?: (indicatorId: string, p
 export default function Step4Advanced() {
   const { getTooltip } = useTooltips();
   const { 
-    indicatorSelections, 
+    indicatorSelections = [], 
     setIndicators, 
-    rules, 
+    rules = [], 
     addRule, 
     removeRule, 
     updateRule, 
@@ -603,19 +603,61 @@ export default function Step4Advanced() {
                     label="Confirmation Bars" 
                     tooltip={getTooltip('step4.confirmationBars')}
                   >
-                    <Num value={advanced.strategy?.confirmationBars || 0} onChange={(v)=>setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), confirmationBars:v}})} min={0} max={20}/>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={(advanced.strategy?.confirmationBars || 0) > 0}
+                        onChange={(e) => setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), confirmationBars: e.target.checked ? 1 : 0}})}
+                        className="rounded"
+                      />
+                      <Num 
+                        value={advanced.strategy?.confirmationBars || 0} 
+                        onChange={(v)=>setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), confirmationBars:v}})} 
+                        min={0} 
+                        max={20}
+                        disabled={(advanced.strategy?.confirmationBars || 0) === 0}
+                      />
+                    </div>
                   </FieldWithTooltip>
                   <FieldWithTooltip 
                     label="Max Entries per Candle" 
                     tooltip={getTooltip('step4.maxEntriesPerCandle')}
                   >
-                    <Num value={advanced.strategy?.maxEntriesPerCandle || 1} onChange={(v)=>setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), maxEntriesPerCandle:v}})} min={1} max={10}/>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={(advanced.strategy?.maxEntriesPerCandle || 1) > 1}
+                        onChange={(e) => setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), maxEntriesPerCandle: e.target.checked ? 2 : 1}})}
+                        className="rounded"
+                      />
+                      <Num 
+                        value={advanced.strategy?.maxEntriesPerCandle || 1} 
+                        onChange={(v)=>setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), maxEntriesPerCandle:v}})} 
+                        min={1} 
+                        max={10}
+                        disabled={(advanced.strategy?.maxEntriesPerCandle || 1) === 1}
+                      />
+                    </div>
                   </FieldWithTooltip>
                   <FieldWithTooltip 
                     label="Re-entry Cooldown" 
                     tooltip={getTooltip('step4.reentryCooldown')}
                   >
-                    <Num value={advanced.strategy?.reentryCooldownBars || 0} onChange={(v)=>setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), reentryCooldownBars:v}})} min={0} max={500}/>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={(advanced.strategy?.reentryCooldownBars || 0) > 0}
+                        onChange={(e) => setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), reentryCooldownBars: e.target.checked ? 1 : 0}})}
+                        className="rounded"
+                      />
+                      <Num 
+                        value={advanced.strategy?.reentryCooldownBars || 0} 
+                        onChange={(v)=>setAdvanced({...advanced, strategy:{...(advanced.strategy || {}), reentryCooldownBars:v}})} 
+                        min={0} 
+                        max={500}
+                        disabled={(advanced.strategy?.reentryCooldownBars || 0) === 0}
+                      />
+                    </div>
                   </FieldWithTooltip>
 
                   {/* Filters */}

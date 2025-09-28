@@ -1,14 +1,7 @@
-"use client";
-import Link from "next/link";
-import StrategyBuilderShell from "@/components/botforge/StrategyBuilderShell";
-import PageHeader from "@/components/botforge/PageHeader";
-import Stepper from "@/components/botforge/Stepper";
+// src/app/(site)/strategy-builder/page.tsx
+import { redirect } from "next/navigation";
 
-export default function StrategyBuilderPage() {
-  return (
-    <StrategyBuilderShell>
-      <PageHeader title="Strategy Builder" subtitle="Configure strategy parameters, entry logic, and exits." />
-      <Stepper current="market" />
-    </StrategyBuilderShell>
-  );
+export default function StrategyBuilderIndex() {
+  redirect("/strategy-builder/step1");
+  return null;
 }

@@ -23,7 +23,7 @@ function Pill({ active, onClick, children }:{ active?:boolean; onClick:()=>void;
 }
 
 export default function Step7Backtest() {
-  const { lookback, setLookback, marketType, pairs, indicatorSelections, selectedPreset, rules, advanced, timeframe, setBacktestCompleted } = useBuilderStore() as any;
+  const { lookback, setLookback, marketType, pairs = [], indicatorSelections = [], selectedPreset, rules = [], advanced, timeframe, setBacktestCompleted } = useBuilderStore() as any;
   const [running, setRunning] = useState(false);
   const [useCustomRange, setUseCustomRange] = useState(false);
   const [startDate, setStartDate] = useState("");
