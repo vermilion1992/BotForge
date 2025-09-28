@@ -5,6 +5,7 @@ import Stepper from "@/components/botforge/Stepper";
 import { Card, CardTitle, Small } from "@/components/botforge/Card";
 import { useBuilderStore } from "@/botforge/state/builderStore";
 import { useRouter } from "next/navigation";
+import { validateStep } from "@/botforge/lib/stepValidation";
 
 function Pill({ active, onClick, children }:{ active?:boolean; onClick:()=>void; children:React.ReactNode }) {
   return (
@@ -22,7 +23,7 @@ function Pill({ active, onClick, children }:{ active?:boolean; onClick:()=>void;
 }
 
 export default function Step7Backtest() {
-  const { lookback, setLookback } = useBuilderStore() as any;
+  const { lookback, setLookback, marketType, pairs, indicatorSelections, selectedPreset, rules, advanced, timeframe, setBacktestCompleted } = useBuilderStore() as any;
   const [running, setRunning] = useState(false);
   const [useCustomRange, setUseCustomRange] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -40,8 +41,25 @@ export default function Step7Backtest() {
   const minDateString = minDate.toISOString().split('T')[0];
 
   async function run() {
+    // Validate before running
+    const validation = validateStep("backtest", {
+      marketType,
+      pairs,
+      indicatorSelections,
+      selectedPreset,
+      rules,
+      advanced,
+      timeframe
+    });
+    
+    if (!validation.canProceed) {
+      alert("Please complete all required steps before running backtest:\n" + validation.errors.join('\n'));
+      return;
+    }
+    
     setRunning(true);
     await fetch("/api/backtest/summary", { method: "GET" }); // warm mock
+    setBacktestCompleted(true); // Mark backtest as completed
     setTimeout(()=>router.push("/strategy-builder/step8"), 400);
   }
   return (

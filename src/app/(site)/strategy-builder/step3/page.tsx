@@ -68,6 +68,12 @@ export default function Step3Strategy() {
   const [designIntentFilter, setDesignIntentFilter] = useState<string>("All");
   const [strategyBackContext, setStrategyBackContext] = useState<{ type: 'strategies' | 'indicator', indicatorId?: string, indicatorName?: string } | null>(null);
 
+  // Sync local UI state with builder store on mount and when store changes
+  useEffect(() => {
+    const indicatorIds = new Set(indicatorSelections.map(sel => sel.id));
+    setSelectedIndicators(indicatorIds);
+  }, [indicatorSelections]);
+
   useEffect(()=>{ 
     (async () => {
       try {

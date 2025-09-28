@@ -12,6 +12,7 @@ import { sortRulesAlpha } from "@/botforge/lib/rule_alpha";
 import { ruleSentence } from "@/botforge/lib/friendly";
 import { DEBUG_SUMMARY } from "@/botforge/lib/selectors/summarySelectors";
 import { getFriendlyRuleTitle, getRuleAlphaLabel } from "@/botforge/lib/ruleTitles";
+import { validateStep } from "@/botforge/lib/stepValidation";
 import ToggleSlider from "@/components/botforge/ToggleSlider";
 import RiskControlsSection from "@/components/botforge/RiskControlsSection";
 import RiskAndCapitalSection from "@/components/botforge/RiskAndCapitalSection";
@@ -52,7 +53,7 @@ function Toggle({checked,onChange,label}:{checked:boolean; onChange:(v:boolean)=
   return <ToggleSlider checked={checked} onChange={onChange} label={label} size="sm" />;
 }
 
-function formatRuleForDisplay(rule: any): string {
+function formatRuleForDisplay(rule: any, getParamValue?: (indicatorId: string, paramKey: string) => string): string {
   try {
     if (!rule) return "Invalid rule";
     
@@ -95,9 +96,12 @@ function formatRuleForDisplay(rule: any): string {
     // Format right side - handle all possible types safely
     if (rule.right?.type === "indicator_param") {
       const paramName = rule.right.param || "parameter";
-      const paramValue = rule.right.param === "oversold" ? "30" : 
-                        rule.right.param === "overbought" ? "70" :
-                        rule.right.param === "midline" ? "50" : "value";
+      // Use dynamic parameter value lookup if available, otherwise fall back to defaults
+      const paramValue = getParamValue ? 
+        getParamValue(rule.right.indicator || "", rule.right.param || "") :
+        (rule.right.param === "oversold" ? "30" : 
+         rule.right.param === "overbought" ? "70" :
+         rule.right.param === "midline" ? "50" : "value");
       right = `${paramName} (${paramValue})`;
     } else if (rule.right?.type === "indicator") {
       right = rule.right.id?.toUpperCase() || "Indicator";
@@ -152,13 +156,30 @@ export default function Step4Advanced() {
     cancelRuleEdit,
     beginEditRule,
     summaryMode,
-    setSummaryMode
+    setSummaryMode,
+    marketType,
+    pairs,
+    timeframe
   } = useBuilderStore();
 
   // load indicator metas for dynamic params editor (EMA etc.)
   const [metas, setMetas] = useState<any[]>([]);
   useEffect(()=>{ fetchAllIndicatorMetas().then(setMetas); }, []);
   const metaById = useMemo(()=> Object.fromEntries(metas.map((m:any)=>[m.identity.id,m])),[metas]);
+
+  /** Helper to get current parameter value from indicator settings */
+  const getCurrentParamValue = (indicatorId: string, paramKey: string): string => {
+    const selection = indicatorSelections.find(sel => sel.id === indicatorId);
+    if (!selection) return "value";
+    
+    const meta = metaById[indicatorId];
+    if (!meta) return "value";
+    
+    const paramDef = meta.params?.[paramKey];
+    const currentValue = selection.params?.[paramKey] ?? paramDef?.default;
+    
+    return String(currentValue);
+  };
 
   // Auto-apply presets into params/risk/exits and seed rules (once)
   useEffect(()=>{
@@ -778,7 +799,7 @@ export default function Step4Advanced() {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-sm">
-                        {formatRuleForDisplay(rule)}
+                        {formatRuleForDisplay(rule, getCurrentParamValue)}
                       </div>
                     </div>
                           <div className="flex items-center gap-2">
@@ -877,9 +898,42 @@ export default function Step4Advanced() {
           <button onClick={() => window.location.href = '/strategy-builder/step3'} className="rounded-xl border border-gray-300 dark:border-neutral-600 px-6 py-3 shadow-sm hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors font-medium">
             Back to Strategy & Indicators
           </button>
-          <button onClick={() => window.location.href = '/strategy-builder/step7'} className="rounded-xl bg-blue-600 text-white px-6 py-3 shadow-sm hover:bg-blue-700 transition-colors font-medium">
-            Continue to Strategy Review & Backtest
-          </button>
+          <div>
+            {(() => {
+              // Check if current step (advanced) has minimum requirements to proceed
+              const hasBasicSetup = marketType && pairs?.length > 0 && indicatorSelections?.length > 0;
+              const hasEntryConditions = rules?.length > 0 || selectedPreset;
+              const hasTimeframe = timeframe;
+              
+              const canProceed = hasBasicSetup && hasEntryConditions && hasTimeframe;
+              const errors = [];
+              
+              if (!hasBasicSetup) {
+                errors.push("Complete market and strategy selection in previous steps");
+              }
+              if (!hasEntryConditions) {
+                errors.push("Configure entry conditions or select a strategy preset");
+              }
+              if (!hasTimeframe) {
+                errors.push("Select a trading timeframe");
+              }
+              
+              return (
+                <button 
+                  onClick={() => canProceed && (window.location.href = '/strategy-builder/step7')} 
+                  disabled={!canProceed}
+                  className={`rounded-xl px-6 py-3 shadow-sm transition-colors font-medium ${
+                    canProceed
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-300 dark:bg-neutral-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                  }`}
+                  title={!canProceed ? errors.join(' • ') : ''}
+                >
+                  Continue to Strategy Review & Backtest
+                </button>
+              );
+            })()}
+          </div>
         </div>
       </div>
     </div>

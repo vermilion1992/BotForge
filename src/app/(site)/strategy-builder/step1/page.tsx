@@ -61,7 +61,7 @@ export default function Step1Market() {
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  useEffect(()=>{ setSelection(pairs || []); },[]);
+  useEffect(()=>{ setSelection(pairs || []); },[pairs]);
 
   /** base universe by selector */
   const baseUniverse = useMemo(()=>{

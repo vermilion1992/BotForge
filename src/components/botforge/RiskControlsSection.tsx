@@ -41,19 +41,28 @@ export default function RiskControlsSection() {
       setSelectedTier(null);
       setExpandedTier(null);
       setDraft(null);
+      // Clear the risk settings from store when deselecting
+      const clearedAdvanced = { ...advanced };
+      delete clearedAdvanced.exits;
+      delete clearedAdvanced.breakeven;
+      delete clearedAdvanced.trailingTP;
+      delete clearedAdvanced.timeStop;
+      delete clearedAdvanced.atrStop;
+      delete clearedAdvanced._riskTier;
+      delete clearedAdvanced._riskVariant;
+      setAdvanced(clearedAdvanced);
     } else {
-      // Just select, don't expand
+      // Select and automatically apply the balanced variant
       setSelectedTier(tier);
-      // Don't set expandedTier here anymore
+      // Apply the default "balanced" variant immediately to the store
+      const defaultDraft = clonePreset(tier, "balanced");
+      const merged = applyDraftToAdvanced(advanced, tier, "balanced", defaultDraft);
+      setAdvanced(merged);
     }
   };
 
   const handleLearnMoreClick = (tier: RiskTier) => {
-    // First select the tier if not already selected
-    if (selectedTier !== tier) {
-      setSelectedTier(tier);
-    }
-    // Then expand it
+    // Just expand it - don't auto-select
     setExpandedTier(tier);
     setSelectedVariant("balanced");
     setDraft(clonePreset(tier, "balanced"));
@@ -70,11 +79,30 @@ export default function RiskControlsSection() {
   };
 
   const handleApply = () => {
-    if (expandedTier && draft) {
-      const merged = applyDraftToAdvanced(advanced, expandedTier, selectedVariant, draft);
-      setAdvanced(merged);
-      setExpandedTier(null);
-      setDraft(null);
+    if (expandedTier) {
+      if (selectedTier === expandedTier) {
+        // Deselect: clear the risk settings from store
+        setSelectedTier(null);
+        const clearedAdvanced = { ...advanced };
+        delete clearedAdvanced.exits;
+        delete clearedAdvanced.breakeven;
+        delete clearedAdvanced.trailingTP;
+        delete clearedAdvanced.timeStop;
+        delete clearedAdvanced.atrStop;
+        delete clearedAdvanced._riskTier;
+        delete clearedAdvanced._riskVariant;
+        setAdvanced(clearedAdvanced);
+      } else {
+        // Select: apply the draft settings
+        if (draft) {
+          const merged = applyDraftToAdvanced(advanced, expandedTier, selectedVariant, draft);
+          setAdvanced(merged);
+          setSelectedTier(expandedTier);
+        }
+      }
+      // Keep the expanded tile open - don't close it
+      // setExpandedTier(null);
+      // setDraft(null);
     }
   };
 
@@ -134,6 +162,7 @@ export default function RiskControlsSection() {
             variant={selectedVariant}
             draft={draft}
             validation={validation}
+            isSelected={selectedTier === expandedTier}
             onBack={handleBack}
             onSelectVariant={handleSelectVariant}
             onApply={handleApply}
@@ -216,6 +245,7 @@ function ExpandedTile({
   variant, 
   draft, 
   validation,
+  isSelected,
   onBack, 
   onSelectVariant, 
   onApply, 
@@ -230,6 +260,7 @@ function ExpandedTile({
   variant: RiskVariant; 
   draft: any; 
   validation: Validation | null;
+  isSelected: boolean;
   onBack: () => void; 
   onSelectVariant: (v: RiskVariant) => void; 
   onApply: () => void; 
@@ -292,58 +323,43 @@ function ExpandedTile({
           ))}
         </div>
 
-        {/* Risk Management Description */}
+        {/* Exit Strategy Overview */}
         <div className="mb-6">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Risk Management Approach</h4>
+          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+            {tier === "standard" ? "Simple Exit Strategy" : tier === "advanced" ? "Multi-Target Exit Strategy" : "Adaptive Exit Strategy"}
+          </h4>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-            This {tier} risk management strategy uses {tier === "standard" ? "fixed stop-loss and take-profit levels" : tier === "advanced" ? "multi-target scaling with trailing stops" : "ATR-based adaptive exits and advanced risk controls"} to protect your capital and maximize profit potential. The {variant} variant provides {variant === "conservative" ? "lower risk with tighter controls" : variant === "balanced" ? "moderate risk with balanced protection" : "higher risk tolerance with aggressive profit targets"}.
+            {tier === "standard" ? (
+              variant === "conservative" ? 
+                "Conservative approach with tight stop-losses and modest profit targets. Prioritizes capital preservation with 3% stops and 6% profit targets for consistent, low-risk returns." :
+              variant === "balanced" ?
+                "Balanced approach using fixed 5% stop-losses and 10% profit targets. Provides reliable risk-reward ratios suitable for most trading styles and market conditions." :
+                "Aggressive approach with wider 7% stops and 14% profit targets. Allows for larger price swings while targeting higher returns per trade."
+            ) : tier === "advanced" ? (
+              variant === "conservative" ?
+                "Multi-stage exit strategy with tight controls. Scales out at 5%, 8%, 12% profit levels with 4% stops, moving to breakeven after first target. Includes 0.8% trailing stops and 30-bar time limits." :
+              variant === "balanced" ?
+                "Balanced multi-target approach scaling out at 6%, 10%, 15% with 5% stops. Moves to breakeven after first target, trails remaining position at 1.0%, and includes 60-bar time exits for optimal risk-reward." :
+                "Aggressive multi-target strategy with 7%, 12%, 20% profit targets and 7% stops. Allows positions more time to develop (90 bars) while trailing aggressively at 1.3% for maximum profit potential."
+            ) : (
+              variant === "conservative" ?
+                "Market-adaptive strategy using 1.8× ATR stops with conservative multi-targets at 5%, 8%, 12%. Automatically adjusts to volatility with 0.8× ATR trailing and 30-bar time limits." :
+              variant === "balanced" ?
+                "Sophisticated ATR-based exits with 2.0× ATR stops and balanced targets at 6%, 10%, 15%. Adapts to market volatility with 1.0× ATR trailing and 60-bar position limits." :
+                "Advanced volatility-adaptive approach using 2.5× ATR stops with aggressive 7%, 12%, 20% targets. Maximizes profit in trending markets with 1.3× ATR trailing and 90-bar time limits."
+            )}
           </p>
-          
-          <div className="mb-4">
-            <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">How It Works</h5>
-            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1.5 list-disc list-inside">
-              {tier === "standard" ? (
-                <>
-                  <li>Sets fixed stop-loss and take-profit levels for each trade</li>
-                  <li>Provides clear exit signals based on price targets</li>
-                  <li>Uses simple percentage-based risk management</li>
-                  <li>Offers straightforward profit and loss protection</li>
-                </>
-              ) : tier === "advanced" ? (
-                <>
-                  <li>Scales out positions across multiple profit targets</li>
-                  <li>Moves stop to break-even after first target hits</li>
-                  <li>Trails remaining position with percentage-based stops</li>
-                  <li>Includes time-based exits to prevent stale positions</li>
-                </>
-              ) : (
-                <>
-                  <li>Uses ATR-based trailing stops for market-adaptive exits</li>
-                  <li>Implements ATR safety stops for maximum risk control</li>
-                  <li>Combines multi-target scaling with dynamic risk management</li>
-                  <li>Provides sophisticated exit strategies for experienced traders</li>
-                </>
-              )}
-            </ul>
-          </div>
         </div>
 
-        {/* Configuration Settings */}
-        <div className="mb-6 p-4 border border-gray-200 dark:border-neutral-700 rounded-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-white">Configuration</h4>
+        {/* Settings */}
+        <div className="mb-6">
+          <div className="flex justify-end mb-2">
             <button
               onClick={onResetToDefault}
               className="px-3 py-1 text-xs bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors"
             >
               Reset to Default
             </button>
-          </div>
-          
-          {/* Current Settings Summary */}
-          <div className="mb-4 p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg">
-            <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Current Settings</h5>
-            <p className="text-sm text-gray-600 dark:text-gray-300">{summary}</p>
           </div>
           
           <Editors tier={tier} draft={draft} setDraft={setDraft} getTooltip={getTooltip} />
@@ -435,10 +451,12 @@ function ExpandedTile({
             className={`px-6 py-3 rounded-xl font-medium transition-colors ${
               validation?.errors.length && validation.errors.length > 0
                 ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                : isSelected
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
             }`}
           >
-            Select This Risk Profile
+            {isSelected ? "Deselect This Exit Strategy" : "Select This Exit Strategy"}
           </button>
         </div>
       </div>

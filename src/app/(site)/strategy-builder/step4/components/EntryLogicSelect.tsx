@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useBuilderStore, type RuleGroupMode } from "@/botforge/state/builderStore";
 import { getRuleAlphaLabel } from "@/botforge/lib/ruleTitles";
 import { FieldWithTooltip } from "@/components/ui/FieldWithTooltip";
@@ -16,7 +16,8 @@ export default function EntryLogicSelect() {
     advanced,
     setAdvanced,
     timeframe,
-    setTimeframe
+    setTimeframe,
+    marketType
   } = useBuilderStore();
 
   const sortedRules = useMemo(() => {
@@ -24,6 +25,33 @@ export default function EntryLogicSelect() {
   }, [rules]);
 
   const hasEnoughRules = sortedRules.length >= 2;
+
+  // Auto-set trade direction based on market type
+  useEffect(() => {
+    if (marketType === "spot") {
+      // For spot markets, always ensure trade direction is LongOnly
+      if (!advanced.entry?.tradeDirection || advanced.entry.tradeDirection !== "LongOnly") {
+        setAdvanced({
+          ...advanced,
+          entry: {
+            ...(advanced.entry || {}),
+            tradeDirection: "LongOnly"
+          }
+        });
+      }
+    } else if (marketType === "perp") {
+      // For perp markets, default to "Both" if nothing is set
+      if (!advanced.entry?.tradeDirection) {
+        setAdvanced({
+          ...advanced,
+          entry: {
+            ...(advanced.entry || {}),
+            tradeDirection: "Both"
+          }
+        });
+      }
+    }
+  }, [marketType, advanced.entry?.tradeDirection, setAdvanced]);
 
   return (
     <div className="space-y-3">
@@ -55,12 +83,20 @@ export default function EntryLogicSelect() {
         >
           <select 
             className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={advanced.entry?.tradeDirection || "Both"}
+            value={advanced.entry?.tradeDirection || (marketType === "spot" ? "LongOnly" : "Both")}
             onChange={(e) => setAdvanced({...advanced, entry: {...(advanced.entry || {}), tradeDirection: e.target.value as any}})}
           >
-            <option value="Both">Both</option>
-            <option value="LongOnly">Long Only</option>
-            <option value="ShortOnly">Short Only</option>
+            {marketType === "spot" ? (
+              <>
+                <option value="LongOnly">Long Only</option>
+              </>
+            ) : (
+              <>
+                <option value="Both">Both</option>
+                <option value="LongOnly">Long Only</option>
+                <option value="ShortOnly">Short Only</option>
+              </>
+            )}
           </select>
         </FieldWithTooltip>
         <FieldWithTooltip

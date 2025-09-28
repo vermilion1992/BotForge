@@ -92,13 +92,13 @@ export const defaultAdvanced: AdvancedSettings = {
 };
 
 export const defaultRiskSettings: RiskSettings = {
-  startingCapital: 10000,
+  startingCapital: 1000,
   riskPerTradePct: 1,
   maxConcurrentTrades: 3,
-  maxLeverage: 5,
+  maxLeverage: 1,
   notionalCapPerTrade: null,
   dailyDrawdownStopPct: null,
-  useCurrentEquityForSizing: true,
+  useCurrentEquityForSizing: false,
   perAssetExposureCapPct: null,
   lossStreakLockoutN: null,
 };
@@ -127,6 +127,9 @@ export const useBuilderStore = create((set, get) => ({
   // Step 5 - Risk Settings
   riskSettings: defaultRiskSettings,
   
+  // Backtest Status
+  backtestCompleted: false,
+  
   // Actions
   setIndicators: (selections) => set({ indicatorSelections: selections }),
   setSelectedPreset: (preset) => set({ selectedPreset: preset }),
@@ -149,6 +152,9 @@ export const useBuilderStore = create((set, get) => ({
   
   // Step 5 Actions
   setRisk: (riskSettings) => set({ riskSettings }),
+  
+  // Backtest Actions
+  setBacktestCompleted: (completed) => set({ backtestCompleted: completed }),
   
   applyPresetById: (presetId, presetObj) => set((state) => {
     const preset = presetObj || state.selectedPreset;
